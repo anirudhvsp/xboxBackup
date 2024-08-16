@@ -1,0 +1,8 @@
+# Ignore downloaded media folder
+downloaded_media/
+
+# Ignore log file
+logfile.log
+
+# Ignore secret key file
+secret_key
