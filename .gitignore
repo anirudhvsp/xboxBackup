@@ -1,8 +1,17 @@
+__pycache__/
 # Ignore downloaded media folder
 downloaded_media/
+streaming_files/
+thumbnails/
 
 # Ignore log file
 logfile.log
 
 # Ignore secret key file
 secret_key
+client_secret.json
+
+keepAlive.py
+convertFilesTemp.py
+token.json
+uploaded_videos.txt

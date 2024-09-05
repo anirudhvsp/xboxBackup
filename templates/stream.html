@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player</title>
+    <link href="https://vjs.zencdn.net/7.2.3/video-js.min.css" rel="stylesheet">
+    <style>
+        #qualityToggle, #downloadVid {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <video id="hls-example" class="video-js vjs-default-skin" controls preload="auto" width="640" height="360">
+        <source type="application/x-mpegURL" src="/static/{{ video_name }}/lowQuality/stream.m3u8" label="Low Quality">
+        <source type="application/x-mpegURL" src="/static/{{ video_name }}/highQuality/stream.m3u8" label="High Quality">
+        Your browser does not support the video tag.
+    </video>
+
+    <button id="qualityToggle">Toggle Quality</button>
+    <button id="downloadVid">Download in HD</button>
+    <script src="https://vjs.zencdn.net/ie8/ie8-version/videojs-ie8.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.14.1/videojs-contrib-hls.js"></script>
+    <script src="https://vjs.zencdn.net/7.2.3/video.js"></script>
+
+    <script>
+        var player = videojs('hls-example');
+        player.play();
+
+        var currentQuality = 'low';
+        var qualityToggle = document.getElementById('qualityToggle');
+
+        qualityToggle.addEventListener('click', function() {
+            if (currentQuality === 'low') {
+                player.src({ type: 'application/x-mpegURL', src: '/static/{{ video_name }}/highQuality/stream.m3u8' });
+                currentQuality = 'high';
+                qualityToggle.textContent = 'Switch to Low Quality';
+            } else {
+                player.src({ type: 'application/x-mpegURL', src: '/static/{{ video_name }}/lowQuality/stream.m3u8' });
+                currentQuality = 'low';
+                qualityToggle.textContent = 'Switch to High Quality';
+            }
+            player.play();
+        });
+
+        var downloadVid = document.getElementById('downloadVid');
+        downloadVid.addEventListener('click', function() {
+            window.location.href = '/download/{{ video_name }}';
+        });
+    </script>
+</body>
+</html>

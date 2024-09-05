@@ -74,5 +74,16 @@ def download_media(activity_history):
 activity_history = get_activity_history()
 if activity_history:
     download_media(activity_history)
+    
+    # Import and run the convertFiles script
+    import convertFiles
+    
+    # Define the directories
+    originals_dir = "downloaded_media/"
+    converted_dir = "streaming_files/"
+    thumbnail_dir = "thumbnails/"
+    
+    # Process and convert videos, generate thumbnails
+    convertFiles.process_videos(originals_dir, converted_dir, thumbnail_dir)
 else:
     print("No activity history available for download")
