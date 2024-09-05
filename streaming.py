@@ -9,29 +9,36 @@ DOWNLOADED_MEDIA_DIR = "downloaded_media"
 
 @app.route('/')
 def index():
+    return render_template('index.html')  # Initial load without media
+
+@app.route('/media_page/<int:page>')
+def media_page(page):
     videos = []
     images = []
     
-    # Get videos
+    # Get videos and images as before
     for video in os.listdir(STREAMING_DIR):
         if os.path.isdir(os.path.join(STREAMING_DIR, video)):
             thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{video}.jpg")
             if not os.path.exists(thumbnail_path):
-                # Generate thumbnail if it doesn't exist
                 video_path = os.path.join(STREAMING_DIR, video, "index.m3u8")
                 subprocess.run(['ffmpeg', '-i', video_path, '-ss', '00:00:01', '-vframes', '1', thumbnail_path])
             videos.append({'name': video, 'thumbnail': f"/thumbnails/{video}.jpg", 'type': 'video'})
     
-    # Get images
     for file in os.listdir(DOWNLOADED_MEDIA_DIR):
         if file.lower().endswith('.png'):
             images.append({'name': file, 'thumbnail': f"/downloaded_media/{file}", 'type': 'image'})
     
-    # Combine and sort all media
     all_media = videos + images
     all_media.sort(key=lambda x: os.path.getmtime(os.path.join(STREAMING_DIR if x['type'] == 'video' else DOWNLOADED_MEDIA_DIR, x['name'])), reverse=True)
-    
-    return render_template('index.html', media=all_media)
+
+    # Pagination logic for infinite scrolling
+    per_page = 10  # Number of media items per scroll page
+    start = (page - 1) * per_page
+    end = page * per_page
+    media_page = all_media[start:end]
+    total_media = len(all_media)
+    return render_template('media_page.html', media=media_page, current_page=page, total_pages=total_media)
 
 @app.route('/thumbnails/<path:filename>')
 def serve_thumbnail(filename):

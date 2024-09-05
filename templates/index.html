@@ -3,40 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Media</title>
-    <style>
-        .media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .media-tile {
-            text-align: center;
-        }
-        .media-tile img {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            aspect-ratio: 16 / 9;
-        }
-    </style>
+    <title>Xbox Media</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
 </head>
 <body>
-    <h1>Available Media</h1>
-    <div class="media-grid">
-        {% for item in media %}
-            <div class="media-tile">
-                {% if item.type == 'video' %}
-                    <a href="{{ url_for('stream', video_name=item.name) }}">
-                {% else %}
-                    <a href="{{ item.thumbnail }}" target="_blank">
-                {% endif %}
-                    <img src="{{ item.thumbnail }}" alt="{{ item.name }}">
-                    <p>{{ item.name }}</p>
-                </a>
-                <a href="{{ url_for('download_media', media_name=item.name) }}">Download</a>
-            </div>
-        {% endfor %}
-    </div>
+    <header>
+        <h1>Xbox Media</h1>
+    </header>
+    <main>
+        <section id="media-container" hx-get="/media_page/1" hx-trigger="load" hx-swap="innerHTML">
+            <!-- Initial media tiles will be loaded here -->
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Xbox Media</p>
+    </footer>
 </body>
 </html>

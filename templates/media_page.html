@@ -1,0 +1,9 @@
+{% for media_item in media %}
+    <div class="media-tile" data-page="{{ current_page }}">
+        <a href="/{{ media_item.type }}/{{ media_item.name }}">
+            <img src="{{ media_item.thumbnail }}" alt="{{ media_item.name }}">
+            <p>{{ media_item.name }}</p>
+        </a>
+        <a href="/download/{{ media_item.name }}">Download</a> 
+    </div>
+{% endfor %}
