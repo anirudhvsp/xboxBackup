@@ -34,3 +34,25 @@ This project utilizes the Xbox Live API (xbl.io) and Windows Task Scheduler to a
 Once set up, the system will automatically run according to your scheduled task settings. It will download any new media from your Xbox Live account to your local machine, ensuring you have a backup of all your game clips and screenshots.
 
 This automated process allows you to maintain a local or cloud-based archive of your Xbox media without manual intervention, protecting your memories from potential deletion on Xbox servers.
+
+## Update: Streaming Functionality
+
+This project now includes a web-based streaming interface for viewing your downloaded media.
+
+### New Features:
+- Web interface to browse and stream your game clips and screenshots
+- Automatic thumbnail generation for video files
+- Support for both video streaming and image viewing
+- Download option for all media files
+
+### Additional Dependencies:
+- Flask: Web framework for Python
+- ffmpeg: Required for thumbnail generation and video processing
+
+### Setup for Streaming:
+1. Install Flask: `pip install flask`
+2. Install ffmpeg: Download and install from [ffmpeg.org](https://ffmpeg.org/)
+3. Run `streaming.py` to start the web server
+4. Access the interface through your web browser at `http://localhost:5000`
+
+This new functionality allows you to easily view and manage your Xbox media through a user-friendly web interface, enhancing the overall utility of the Xbox Media Downloader.
