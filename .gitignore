@@ -15,3 +15,7 @@ keepAlive.py
 convertFilesTemp.py
 token.json
 uploaded_videos.txt
+video_map.json
+name_map.json
+delete_high_quality.py
+generate_720p.py

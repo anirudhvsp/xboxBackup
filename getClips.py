@@ -82,8 +82,8 @@ if activity_history:
     originals_dir = "downloaded_media/"
     converted_dir = "streaming_files/"
     thumbnail_dir = "thumbnails/"
-    
+    map_file_path = "video_map.json"
     # Process and convert videos, generate thumbnails
-    convertFiles.process_videos(originals_dir, converted_dir, thumbnail_dir)
+    convertFiles.process_videos(originals_dir, converted_dir, thumbnail_dir, map_file_path)
 else:
     print("No activity history available for download")

@@ -1,9 +1,155 @@
-{% for media_item in media %}
-    <div class="media-tile" data-page="{{ current_page }}">
-        <a href="/{{ media_item.type }}/{{ media_item.name }}">
-            <img src="{{ media_item.thumbnail }}" alt="{{ media_item.name }}">
-            <p>{{ media_item.name }}</p>
-        </a>
-        <a href="/download/{{ media_item.name }}">Download</a> 
+{% if media %}
+<div class="media-grid-page">
+    {% for item in media %}
+    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}" data-type="{{ item.type }}" {% if item.type == 'stream' %}hx-get="/stream/{{ item.name }}" hx-target="body" hx-push-url="true"{% endif %}>
+        <div class="image-container">
+            <div class="ghost-image"></div>
+        </div>
+        <div class="ghost-text"></div>
     </div>
-{% endfor %}
+    {% endfor %}
+</div>
+
+{% if page < total_pages %}
+<div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once" hx-swap="outerHTML"></div>
+{% endif %}
+{% endif %}
+
+<script>
+function loadActualContent() {
+    const tiles = document.querySelectorAll('.media-tile.ghost-loading');
+    tiles.forEach(tile => {
+        const name = tile.dataset.name;
+        const thumbnail = tile.dataset.thumbnail;
+        const type = tile.dataset.type;
+        
+        tile.innerHTML = `
+            <div class="image-container">
+                <img class="lazy-load" data-src="${thumbnail}" alt="${name}">
+            </div>
+            <p>${name}</p>
+        `;
+        tile.classList.remove('ghost-loading');
+        tile.classList.add('loading');
+
+        if (type === 'image') {
+            tile.addEventListener('click', () => {
+                window.open(`/downloaded_media/${name}`, '_blank');
+            });
+        }
+    });
+    lazyLoadImages();
+}
+
+function lazyLoadImages() {
+    const images = document.querySelectorAll('.media-tile.loading img.lazy-load');
+    images.forEach(img => {
+        if (img.dataset.src) {
+            img.onload = function() {
+                this.style.opacity = 1;
+                this.closest('.media-tile').classList.remove('loading');
+                this.closest('.media-tile').classList.add('loaded');
+            };
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadActualContent);
+document.addEventListener('htmx:load', loadActualContent);
+document.addEventListener('htmx:afterSwap', loadActualContent);
+</script>
+<style>
+    .media-tile[data-type="image"] {
+        cursor: pointer;
+    }
+    .media-grid-page, .media-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 8px;
+    }
+
+    @media screen and (min-width: 768px) {
+        .media-grid-page, .media-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+    }
+    .media-tile {
+        text-align: center;
+        background-color: var(--tile-bg);
+        padding: 8px; /* Reduced padding for thinner borders */
+        border-radius: 8px; /* Slightly reduced border radius */
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtler shadow */
+        transition: transform 0.3s ease;
+        font-size: 0.75em; /* Smaller font size for text */
+    }
+
+    .media-tile:hover {
+        transform: scale(1.05); /* Slightly enlarge the tile on hover */
+    }
+
+    .media-tile.loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: loading 1.5s infinite;
+    }
+
+    .media-tile img {
+        width: 100%;
+        height: auto;
+        min-height: 150px; /* Increased minimum height */
+        border-radius: 6px; /* Slightly reduced border radius for images */
+    }
+
+    .media-tile p {
+        margin: 6px 0 0 0; /* Reduced top margin for text */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ghost-image {
+        height: 180px; /* Increased height for ghost image */
+        background-color: var(--tile-bg);
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        border-radius: 8px; /* Rounded corners for images */
+    }
+
+    .media-tile img.loaded {
+        opacity: 1; /* Fade in effect for loaded images */
+    }
+
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .ghost-loading {
+        opacity: 0.7; /* Slightly transparent for loading state */
+    }
+
+    .ghost-image {
+        width: 100%; /* Full width for ghost image */
+        height: 150px; /* Fixed height for ghost image */
+        background-color: var(--tile-bg);
+        border-radius: 8px; /* Rounded corners for ghost image */
+    }
+
+    .ghost-text {
+        height: 1em; /* Height for ghost text */
+        width: 80%; /* Width for ghost text */
+        margin: 10px auto; /* Center align */
+        background-color: var(--tile-bg);
+        border-radius: 4px; /* Rounded corners for ghost text */
+    }
+</style>
