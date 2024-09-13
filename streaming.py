@@ -3,7 +3,7 @@ from flask import Flask, render_template, send_from_directory, send_file, reques
 from datetime import datetime
 from PIL import Image
 from io import BytesIO
-
+import m3u8
 app = Flask(__name__)
 
 STREAMING_DIR = "streaming_files"
@@ -13,6 +13,23 @@ DOWNLOADED_MEDIA_DIR = "downloaded_media"
 def get_creation_date(file_path):
     return datetime.fromtimestamp(os.path.getctime(file_path))
 
+def get_video_duration(folder_path):
+    m3u8_file = os.path.join(folder_path, 'master.m3u8')
+    master_playlist = m3u8.load(m3u8_file)
+    
+    if master_playlist.playlists:
+        # Get the first quality playlist
+        quality_playlist_uri = master_playlist.playlists[0].uri
+        quality_playlist_path = os.path.join(folder_path, quality_playlist_uri)
+        quality_playlist = m3u8.load(quality_playlist_path)
+        
+        total_duration = 0
+        for segment in quality_playlist.segments:
+            total_duration += segment.duration
+        
+        return int(total_duration)
+    else:
+        return 0  # Return 0 if no quality playlists are found
 
 @app.route('/home')
 def index():
@@ -28,11 +45,14 @@ def media_page(page):
             thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{item}.jpg")
             if not os.path.exists(thumbnail_path):
                 thumbnail_path = os.path.join(THUMBNAIL_DIR, "thumbnail_not_available.jpg")
+            duration = get_video_duration(os.path.join(STREAMING_DIR, item))
+            duration_formatted = f"{duration // 60:02d}:{duration % 60:02d}"
             all_media.append({
                 'name': item,
                 'thumbnail': f"/thumbnails/{os.path.basename(thumbnail_path)}",
                 'type': 'stream',
-                'creation_date': get_creation_date(os.path.join(STREAMING_DIR, item))
+                'creation_date': get_creation_date(os.path.join(STREAMING_DIR, item)),
+                'duration' : duration_formatted
             })
 
     for file in os.listdir(DOWNLOADED_MEDIA_DIR):
@@ -67,7 +87,9 @@ def stream(video_name):
     if request.headers.get('HX-Request'):
         return render_template('stream.html', video_name=video_name)
     else:
-        return render_template('stream.html', video_name=video_name), 200, {'HX-Push': f'/stream/{video_name}'}
+        response = make_response(render_template('stream.html', video_name=video_name))
+        response.headers['X-Reset-Body-Padding'] = 'true'
+        return response
 
 # @app.route('/static/<video_name>/<path:filename>')
 # def video_files(video_name, filename):
