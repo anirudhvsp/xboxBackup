@@ -30,7 +30,7 @@ function loadActualContent() {
     
         tile.innerHTML = `
             <div class="image-container">
-                <img class="lazy-load" data-src="${thumbnail}" alt="${name}">
+                <img preload class="lazy-load" data-src="${thumbnail}" alt="${name}">
             </div>
             <div class="title-overlay">
                 <p class="title-text">${name}</p>
