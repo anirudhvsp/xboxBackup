@@ -122,30 +122,42 @@
         
         function fetchAndPreloadAdjacentVideos(videoName) {
             var temp = videoName;
-            for (let i = 1; i <= 1; i++) {
-                fetch(`/brainrot/previous/${temp}`)
+            fetch(`/brainrot/previous/${temp}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(temp);
+                    const prevVideoElement = createVideoElement(data.previous_video, 'previous');
+                    preloadVideo(prevVideoElement, data.previous_video);
+                    temp = data.previous_video;
+                    loadedVideos.unshift(data.previous_video);
+                    fetch(`/brainrot/previous/${temp}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(temp);
                         const prevVideoElement = createVideoElement(data.previous_video, 'previous');
                         preloadVideo(prevVideoElement, data.previous_video);
                         temp = data.previous_video;
                         loadedVideos.unshift(data.previous_video);
                     });
-            }
+                });
 
             temp = videoName;
-            for (let i = 1; i <= 1; i++) {
-                fetch(`/brainrot/next/${temp}`)
+            fetch(`/brainrot/next/${temp}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(temp);
+                    const nextVideoElement = createVideoElement(data.next_video, 'next');
+                    preloadVideo(nextVideoElement, data.next_video);
+                    temp = data.next_video;
+                    loadedVideos.push(data.next_video);
+                    fetch(`/brainrot/next/${temp}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(temp);
                         const nextVideoElement = createVideoElement(data.next_video, 'next');
                         preloadVideo(nextVideoElement, data.next_video);
                         temp = data.next_video;
                         loadedVideos.push(data.next_video);
                     });
-            }
+                });
         }
                
         function createVideoElement(videoId, position) {
