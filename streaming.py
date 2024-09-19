@@ -6,7 +6,8 @@ from io import BytesIO
 import m3u8
 from werkzeug.utils import safe_join
 from flask import jsonify
-
+import itertools
+import random
 
 app = Flask(__name__)
 
@@ -41,9 +42,10 @@ def index():
 
 @app.route('/media_page/<int:page>')
 def media_page(page):
-    all_media = []
+    all_images = []
+    all_videos = []
 
-    # Get videos and images, and sort them by creation date
+    # Get videos and sort them by creation date
     for item in os.listdir(STREAMING_DIR):
         if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not item.startswith("test"):
             m3u8_file = os.path.join(STREAMING_DIR, item, 'master.m3u8')
@@ -55,34 +57,51 @@ def media_page(page):
                 thumbnail_path = os.path.join(THUMBNAIL_DIR, "thumbnail_not_available.jpg")
             duration = get_video_duration(os.path.join(STREAMING_DIR, item))
             duration_formatted = f"{duration // 60:02d}:{duration % 60:02d}"
-            all_media.append({
+            all_videos.append({
                 'name': item,
                 'thumbnail': f"/thumbnails/{os.path.basename(thumbnail_path)}",
                 'type': 'stream',
                 'creation_date': get_creation_date(os.path.join(STREAMING_DIR, item)),
                 'duration' : duration_formatted
             })
-            
+
+    # Get images and sort them by creation date
     for file in os.listdir(DOWNLOADED_MEDIA_DIR):
         if file.lower().endswith(('.png', '.jpg', '.jpeg')):
-            all_media.append({
+            all_images.append({
                 'name': file,
                 'thumbnail': f"/home/compressed_thumbnail/{file}",
                 'type': 'image',
                 'creation_date': get_creation_date(os.path.join(DOWNLOADED_MEDIA_DIR, file))
             })
 
-    # Sort all media by creation date
-    all_media.sort(key=lambda x: x['creation_date'], reverse=True)
+    # Sort images and videos by creation date
+    all_images.sort(key=lambda x: x['creation_date'], reverse=True)
+    all_videos.sort(key=lambda x: x['creation_date'], reverse=True)
 
     # Pagination logic (unchanged)
     per_page = 18
     start = (page - 1) * per_page
     end = page * per_page
-    total_media = len(all_media)
-    total_pages = (total_media - 1) // per_page + 1
 
-    media_page = all_media[start:end]
+    # Limit to 5-10 images per page
+    max_images = min(10, len(all_images))
+    displayed_images = all_images[:max_images]
+
+    # Scatter images randomly throughout the list of videos
+    scattered_media = all_videos[:]  # Start with all videos
+
+    # Randomly insert images into scattered_media
+    for image in displayed_images:
+        position = random.randint(0, len(scattered_media))  # Random position in the videos list
+        scattered_media.insert(position, image)
+
+    # Select only the items for the current page
+    media_page = scattered_media[start:end]
+
+    # Ensure the total media is always paginated correctly
+    total_media = len(scattered_media)
+    total_pages = (total_media - 1) // per_page + 1
 
     html_content = render_template('media_page.html', media=media_page, page=page, total_pages=total_pages)
     return html_content
