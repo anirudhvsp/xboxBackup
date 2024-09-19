@@ -19,3 +19,4 @@ video_map.json
 name_map.json
 delete_high_quality.py
 generate_720p.py
+nohup.out

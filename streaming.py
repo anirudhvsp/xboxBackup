@@ -6,9 +6,9 @@ from io import BytesIO
 
 app = Flask(__name__)
 
-STREAMING_DIR = "streaming_files"
-THUMBNAIL_DIR = "thumbnails"
-DOWNLOADED_MEDIA_DIR = "downloaded_media"
+STREAMING_DIR = "/mnt/ebs/streaming_files"
+THUMBNAIL_DIR = "/mnt/ebs/thumbnails"
+DOWNLOADED_MEDIA_DIR = "/mnt/ebs/downloaded_media"
 
 def get_creation_date(file_path):
     return datetime.fromtimestamp(os.path.getctime(file_path))
