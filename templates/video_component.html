@@ -1,0 +1,44 @@
+<div class="video-container">
+    <video id="videoPlayer-{{ video.id }}" playsinline controls></video>
+</div>
+
+<style>
+    /* Styles for each video component */
+    .video-container {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+
+    video {
+        object-fit: cover;
+        width: 100vw;
+        height: 100vh;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoId = "{{ video.id }}";
+        const playerElement = document.getElementById('videoPlayer-' + videoId);
+        const source = '/static/{{ video.name }}/master.m3u8';
+
+        // Initialize Plyr and HLS.js
+        const defaultOptions = {
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+        };
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(source);
+            hls.attachMedia(playerElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                new Plyr(playerElement, defaultOptions);
+            });
+        } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+            playerElement.src = source;
+            new Plyr(playerElement, defaultOptions);
+        }
+    });
+</script>

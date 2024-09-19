@@ -103,6 +103,34 @@
             100% { transform: rotate(360deg); }
         }
 
+        .navigation {
+            position: fixed;
+            bottom: 50px;
+            left: 0;
+            width: 100%;
+            z-index: 1001;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #backToHome, #tiktokView {
+            width: 48%;
+            height: 50px;
+            margin: 0;
+            border-radius: 0;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #backToHome:hover, #tiktokView:hover {
+            background-color: var(--button-hover-bg);
+            color: var(--button-hover-text);
+        }
+
+
         @media (min-width: 768px) {
             body {
                 padding-top: 70vh;
@@ -119,6 +147,12 @@
                 width: 70%;
                 left: 15%;
             }
+
+            .navigation {
+                width: 70%;
+                left: 15%;
+            }
+
         }
     </style>
 </head>
@@ -133,6 +167,16 @@
                 <video id="player" playsinline controls></video>
             </div>
         </div>
+        <!-- Add this right before the .controls div -->
+        <div class="navigation">
+            <button id="backToHome" onclick="window.location.href='/home'">
+                Back to Home
+            </button>
+            <button id="tiktokView" onclick="window.location.href='/brainrot/{{ video_name }}'">
+                BrainRot Mode
+            </button>
+        </div>
+
         <div class="controls">
             <a href="/home/download/{{ video_name }}" download>
                 <button id="downloadVid">
@@ -246,6 +290,12 @@
             window.addEventListener('pagehide', function() {
                 resetBodyPadding();
                 document.body.dispatchEvent(new Event('streamPageUnloaded'));
+            });
+
+
+            window.addEventListener('beforeunload', function() {
+                document.body.style.paddingTop = '0';
+                document.body.style.paddingBottom = '0';
             });
     </script>
 </body>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Internal Server Error</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
+        h1 { color: #333; }
+        p { color: #666; }
+        .redirect-message { margin-top: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>500 - Internal Server Error</h1>
+    <p>Oops! Something went wrong on our end. We're working on fixing it.</p>
+    <p class="redirect-message">Redirecting to home page in <span id="countdown">5</span> seconds...</p>
+
+    <script>
+        let countdown = 5;
+        const countdownElement = document.getElementById('countdown');
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                window.location.href = "{{ url_for('index') }}";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
