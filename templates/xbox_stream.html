@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xbox Video Stream</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css">
+    <style>
+        /* General styles for the page */
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            scroll-snap-type: y mandatory;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .video-wrapper {
+            display: grid;
+            grid-template-rows: 100vh 100vh 100vh;
+        }
+
+        .video-container {
+            scroll-snap-align: start;
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+<body>
+    <!-- Video Wrapper -->
+    <div class="video-wrapper" id="videoWrapper">
+        <!-- Previous Video -->
+        <div class="video-container" id="previousVideo" hx-get="/xbox_stream/previous/{{ video_name }}" hx-trigger="revealed" hx-target="#prevVideoPlayer">
+            <div id="prevVideoComponent"></div> <!-- Placeholder for previous video -->
+        </div>
+
+        <!-- Current Video -->
+        <div class="video-container" id="currentVideo">
+            {% include 'video_component.html' %}
+        </div>
+
+        <!-- Next Video -->
+        <div class="video-container" id="nextVideo" hx-get="/xbox_stream/next/{{ video_name }}" hx-trigger="revealed" hx-target="#nextVideoComponent">
+            <div id="nextVideoComponent"></div> <!-- Placeholder for next video -->
+        </div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script> <!-- Include HTMX -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentVideoName = '{{ video_name }}';
+            let currentPlyr = preloadVideo('currVideoPlayer', currentVideoName, true);
+            let prevId = '{{prev_video_id}}'
+            let nextId = '{{next_video_id}}'
+            // Preload the previous and next videos using HTMX on "revealed"
+            htmx.on('htmx:afterSwap', (event) => {
+                if (event.detail.target.id === 'prevVideoComponent') {
+                    preloadVideo('prevVideoPlayer', prevId);
+                } else if (event.detail.target.id === 'nextVideoComponent') {
+                    preloadVideo('nextVideoPlayer', nextId);
+                }
+            });
+
+            // Preload video function
+            function preloadVideo(playerId, videoName, autoplay = false) {
+                const playerElement = document.getElementById(playerId);
+                const source = `/static/${videoName}/master.m3u8`;
+
+                let player;
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(source);
+                    hls.attachMedia(playerElement);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        player = new Plyr(playerElement, { controls: ['play', 'progress', 'fullscreen'] });
+                        if (autoplay) player.play();
+                    });
+                } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    playerElement.src = source;
+                    player = new Plyr(playerElement, { controls: ['play', 'progress', 'fullscreen'] });
+                    if (autoplay) player.play();
+                }
+
+                return player;
+            }
+
+            // IntersectionObserver to detect when a video enters the viewport
+            const observerOptions = {
+                root: null,
+                threshold: 0.5 // Trigger when 50% of the video is visible
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // If the current video is intersecting, update video states
+                        if (entry.target.id === 'currentVideo') {
+                            if (currentPlyr) currentPlyr.play();
+                        } else if (entry.target.id === 'previousVideo') {
+                            loadPreviousVideo();
+                        } else if (entry.target.id === 'nextVideo') {
+                            loadNextVideo();
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe video containers
+            document.querySelectorAll('.video-container').forEach(videoContainer => {
+                observer.observe(videoContainer);
+            });
+
+            // Load next and previous videos
+            function loadNextVideo() {
+                htmx.ajax('GET', `/xbox_stream/next/${currentVideoName}`, { target: '#nextVideoComponent' });
+            }
+
+            function loadPreviousVideo() {
+                htmx.ajax('GET', `/xbox_stream/previous/${currentVideoName}`, { target: '#prevVideoComponent' });
+            }
+        });
+    </script>
+</body>
+</html>

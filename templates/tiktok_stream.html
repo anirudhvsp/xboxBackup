@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Video Navigation</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+        .video-wrapper {
+            display: grid;
+            grid-template-rows: 100vh 100vh 100vh;
+            transition: transform 0.5s ease;
+        }
+        .video-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        video {
+            object-fit: cover;
+            width: 100vw;
+            height: 100vh;
+        }
+        .plyr__video-wrapper {
+            height: 100vh;
+        }
+        /* Snapping for smooth transitions */
+        html, body {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .video-container {
+            scroll-snap-align: start;
+        }
+
+        .ghost-loading {
+            height: 100vh;
+            background-color: #1a1a1a;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-wrapper" id="videoWrapper">
+        <div class="ghost-loading" id="previousGhostLoading"></div>
+
+
+        
+
+
+        <div class="ghost-loading" id="nextGhostLoading"></div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script> <!-- Include HTMX -->
+    
+    <script>
+        let currentVideoName = '{{ video_name }}';
+        let isTransitioning = false;
+        let currentPlyr;
+        let loadedVideos = [currentVideoName];
+        let currentVideoIndex = 1; // Index of the current video in the loadedVideos array
+        
+        window.onload = async () => {
+            await initializeVideos();
+            document.getElementById('video-'+currentVideoName).scrollIntoView();
+            // handleViewportChange();
+        };
+
+        function preloadVideo(playerElement, videoName, autoplay = false) {
+            const source = `/static/${videoName}/master.m3u8`;
+            let hls, player;
+
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(source);
+                hls.attachMedia(playerElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    player = new Plyr(playerElement, {
+                        controls: ["play-large", "play"],
+                    });
+                    if (autoplay) {
+                        player.play();
+                    }
+                });
+            } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                playerElement.src = source;
+                player = new Plyr(playerElement, {
+                    controls: ['play-large', 'play'],
+                });
+                if (autoplay) {
+                    player.play();
+                }
+            }
+
+            return player;
+        }
+
+        async function initializeVideos() {
+            
+            
+            var x = createVideoElement(currentVideoName, 'current');
+            currentPlyr = preloadVideo(x, currentVideoName, true);
+            await fetchAndPreloadAdjacentVideos(currentVideoName);
+        }
+        
+        function fetchAndPreloadAdjacentVideos(videoName) {
+            var temp = videoName;
+            for (let i = 1; i <= 1; i++) {
+                fetch(`/brainrot/previous/${temp}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(temp);
+                        const prevVideoElement = createVideoElement(data.previous_video, 'previous');
+                        preloadVideo(prevVideoElement, data.previous_video);
+                        temp = data.previous_video;
+                        loadedVideos.unshift(data.previous_video);
+                    });
+            }
+
+            temp = videoName;
+            for (let i = 1; i <= 1; i++) {
+                fetch(`/brainrot/next/${temp}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(temp);
+                        const nextVideoElement = createVideoElement(data.next_video, 'next');
+                        preloadVideo(nextVideoElement, data.next_video);
+                        temp = data.next_video;
+                        loadedVideos.push(data.next_video);
+                    });
+            }
+        }
+               
+        function createVideoElement(videoId, position) {
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            videoContainer.id = `video-${videoId}`;
+
+            const video = document.createElement('video');
+            video.id = `player-${videoId}`;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('muted', '');
+
+            videoContainer.appendChild(video);
+
+            const wrapper = document.getElementById('videoWrapper');
+            const fragment = document.createDocumentFragment();
+
+            // Add the video container to the fragment
+            fragment.appendChild(videoContainer);
+
+            if (position === 'next') {
+                const lastNonGhostChild = Array.from(wrapper.children).reverse().find(child => !child.classList.contains('ghost-loading'));
+                if (lastNonGhostChild) {
+                    wrapper.insertBefore(fragment, lastNonGhostChild.nextSibling);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            } else if (position === 'current') {
+                const ghostLoadingDivs = wrapper.querySelectorAll('.ghost-loading');
+                if (ghostLoadingDivs.length >= 2) {
+                    wrapper.insertBefore(fragment, ghostLoadingDivs[1]);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            } else {
+                const firstNonGhostChild = Array.from(wrapper.children).find(child => !child.classList.contains('ghost-loading'));
+                if (firstNonGhostChild) {
+                    wrapper.insertBefore(fragment, firstNonGhostChild);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            }
+
+            // Observe the new video for viewport changes
+            observeVideoElement(videoId);
+
+            // Return the video element so it can be preloaded
+            return video;
+        }
+
+
+    function loadNewVideo(videoId, position) {
+        const newVideoElement = createVideoElement(videoId, position);
+        preloadVideo(newVideoElement, videoId);
+    }
+        
+
+    function observeVideoElement(videoId) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                console.log('Video in viewport:', videoId);
+                const currentVideoIndexInList = loadedVideos.indexOf(videoId);
+
+                if (currentVideoIndexInList === 0 || currentVideoIndexInList === 1) {
+                    console.log('Near the beginning of the video list, loading previous videos...');
+                    fetchPreviousVideo(videoId);
+                    fetchPreviousVideo(loadedVideos[0]);
+                }
+
+                // If it's the second-to-last or third-to-last video, load new next videos
+                if (currentVideoIndexInList === loadedVideos.length - 2 || currentVideoIndexInList === loadedVideos.length - 3) {
+                    console.log('Near the end of the video list, loading next videos...');
+                    fetchNextVideo(loadedVideos[loadedVideos.length - 1]);
+                    fetchNextVideo(loadedVideos[loadedVideos.length - 2]);
+                }
+
+                const currentVideo = document.getElementById(`player-${videoId}`);
+                if (currentVideo) {
+                    currentVideo.play();
+                    currentVideo.muted = false;
+                }
+                
+                // Pause all other videos
+                const allVideos = document.querySelectorAll('video');
+                allVideos.forEach(video => {
+                    if (video.id !== `player-${videoId}`) {
+                        video.pause();
+                        video.muted = true;
+                    }
+                });
+            } else {
+                const video = document.getElementById(`player-${videoId}`);
+                if (video) {
+                    video.pause();
+                    video.muted = true;
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    const videoElement = document.getElementById("video-" + videoId);
+    if (videoElement) {
+        observer.observe(videoElement);
+    }
+}
+        
+
+        function fetchPreviousVideo(currentVideoId) {
+            fetch(`/brainrot/previous/${currentVideoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const prevVideoId = data.previous_video;
+                    if (!loadedVideos.includes(prevVideoId)) {
+                        console.log('Preloading previous video:', prevVideoId);
+                        const prevVideoElement = createVideoElement(prevVideoId, 'previous');
+                        preloadVideo(prevVideoElement, prevVideoId);
+                        loadedVideos.unshift(prevVideoId); // Add to the beginning of the list
+                    }
+                });
+        }
+
+        function fetchNextVideo(currentVideoId) {
+            fetch(`/brainrot/next/${currentVideoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const nextVideoId = data.next_video;
+                    if (!loadedVideos.includes(nextVideoId)) {
+                        console.log('Preloading next video:', nextVideoId);
+                        const nextVideoElement = createVideoElement(nextVideoId, 'next');
+                        preloadVideo(nextVideoElement, nextVideoId);
+                        loadedVideos.push(nextVideoId); // Add to the end of the list
+                    }
+                });
+        }
+                
+    </script>
+</body>
+</html>

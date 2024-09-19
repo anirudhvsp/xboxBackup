@@ -109,10 +109,12 @@
             left: 0;
             width: 100%;
             z-index: 1001;
+            display: flex;
+            justify-content: space-between;
         }
 
-        #backToHome {
-            width: 100%;
+        #backToHome, #tiktokView {
+            width: 48%;
             height: 50px;
             margin: 0;
             border-radius: 0;
@@ -123,10 +125,11 @@
             font-size: 16px;
         }
 
-        #backToHome:hover {
+        #backToHome:hover, #tiktokView:hover {
             background-color: var(--button-hover-bg);
             color: var(--button-hover-text);
         }
+
 
         @media (min-width: 768px) {
             body {
@@ -149,6 +152,7 @@
                 width: 70%;
                 left: 15%;
             }
+
         }
     </style>
 </head>
@@ -167,6 +171,9 @@
         <div class="navigation">
             <button id="backToHome" onclick="window.location.href='/home'">
                 Back to Home
+            </button>
+            <button id="tiktokView" onclick="window.location.href='/brainrot/{{ video_name }}'">
+                BrainRot Mode
             </button>
         </div>
 
