@@ -145,7 +145,7 @@ def process_videos(input_dir, output_dir, thumbnail_dir, map_file_path):
         process_single_video(input_file, output_dir, thumbnail_dir, new_folder_name, mapping, map_file_path)
 
 if __name__ == "__main__":
-    originals_dir = "/mnt/ebs/downloaded_media/"
+    originals_dir = "downloaded_media/"
     converted_dir = "/mnt/ebs/streaming_files/"
     thumbnail_dir = "/mnt/ebs/thumbnails/"
     map_file_path = "/mnt/ebs/video_map.json"
