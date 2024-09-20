@@ -26,9 +26,19 @@ def convert_to_adaptive_hls(input_file, output_dir):
     
     ffmpeg_command = [
         ffmpeg_path, "-i", input_file,
-        "-codec: copy", "-start_number 0", 
-        "-hls_time 10", "-hls_list_size 0",
-        "-f", "hls", os.path.join(output_dir, "playlist.m3u8")
+        "-filter_complex", "[0:v]split=4[v1][v2][v3][v4]; [v1]scale=w=1280:h=720[v1out]; [v2]scale=w=854:h=480[v2out]; [v3]scale=w=640:h=360[v3out]; [v4]scale=w=426:h=240[v4out]",
+        "-map", "[v1out]", "-c:v:0", "libx264", "-preset", "veryfast", "-b:v:0", "2000k", "-maxrate:v:0", "2200k", "-bufsize:v:0", "3000k", "-g", "60",
+        "-map", "[v2out]", "-c:v:1", "libx264", "-preset", "veryfast", "-b:v:1", "1000k", "-maxrate:v:1", "1100k", "-bufsize:v:1", "1500k", "-g", "60",
+        "-map", "[v3out]", "-c:v:2", "libx264", "-preset", "veryfast", "-b:v:2", "700k", "-maxrate:v:2", "800k", "-bufsize:v:2", "1000k", "-g", "60",
+        "-map", "[v4out]", "-c:v:3", "libx264", "-preset", "veryfast", "-b:v:3", "400k", "-maxrate:v:3", "500k", "-bufsize:v:3", "700k", "-g", "60",
+        "-map", "a:0", "-c:a", "aac", "-b:a:0", "128k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:1", "96k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:2", "64k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:3", "48k", "-ac", "2",
+        "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_flags", "independent_segments",
+        "-hls_segment_type", "mpegts", "-hls_segment_filename", f"{output_dir}/stream_%v/data%03d.ts",
+        "-master_pl_name", "master.m3u8", "-var_stream_map", "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3",
+        f"{output_dir}/stream_%v/playlist.m3u8"
     ]
 
     try:
@@ -52,20 +62,11 @@ def generate_thumbnail(input_file, output_dir, thumbnail_name):
 
         ffmpeg_command = [
             ffmpeg_path, "-i", input_file,
-            "-filter_complex", "[0:v]split=4[v1][v2][v3][v4]; [v1]scale=w=1280:h=720[v1out]; [v2]scale=w=854:h=480[v2out]; [v3]scale=w=640:h=360[v3out]; [v4]scale=w=426:h=240[v4out]",
-        "-map", "[v1out]", "-c:v:0", "libx264", "-preset", "veryfast", "-b:v:0", "2000k", "-maxrate:v:0", "2200k", "-bufsize:v:0", "3000k", "-g", "60",
-        "-map", "[v2out]", "-c:v:1", "libx264", "-preset", "veryfast", "-b:v:1", "1000k", "-maxrate:v:1", "1100k", "-bufsize:v:1", "1500k", "-g", "60",
-        "-map", "[v3out]", "-c:v:2", "libx264", "-preset", "veryfast", "-b:v:2", "700k", "-maxrate:v:2", "800k", "-bufsize:v:2", "1000k", "-g", "60",
-        "-map", "[v4out]", "-c:v:3", "libx264", "-preset", "veryfast", "-b:v:3", "400k", "-maxrate:v:3", "500k", "-bufsize:v:3", "700k", "-g", "60",
-        "-map", "a:0", "-c:a", "aac", "-b:a:0", "128k", "-ac", "2",
-        "-map", "a:0", "-c:a", "aac", "-b:a:1", "96k", "-ac", "2",
-        "-map", "a:0", "-c:a", "aac", "-b:a:2", "64k", "-ac", "2",
-        "-map", "a:0", "-c:a", "aac", "-b:a:3", "48k", "-ac", "2",
-        "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_flags", "independent_segments",
-        "-hls_segment_type", "mpegts", "-hls_segment_filename", f"{output_dir}/stream_%v/data%03d.ts",
-        "-master_pl_name", "master.m3u8", "-var_stream_map", "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3",
-        f"{output_dir}/stream_%v/playlist.m3u8"
-    ]
+            "-ss", "00:00:01",
+            "-vframes", "1",
+            "-vf", "scale=320:-1",
+            thumbnail_path
+        ]
         try:
             print(f"Running ffmpeg thumbnail command: {' '.join(ffmpeg_command)}")
             result = subprocess.run(ffmpeg_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -145,7 +146,7 @@ def process_videos(input_dir, output_dir, thumbnail_dir, map_file_path):
         process_single_video(input_file, output_dir, thumbnail_dir, new_folder_name, mapping, map_file_path)
 
 if __name__ == "__main__":
-    originals_dir = "downloaded_media/"
+    originals_dir = "/mnt/ebsdownloaded_media/"
     converted_dir = "/mnt/ebs/streaming_files/"
     thumbnail_dir = "/mnt/ebs/thumbnails/"
     map_file_path = "/mnt/ebs/video_map.json"
