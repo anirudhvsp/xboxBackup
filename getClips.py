@@ -1,4 +1,13 @@
 import requests
+import os
+import json
+from pathlib import Path
+
+def load_map_file(map_file_path):
+    if os.path.exists(map_file_path):
+        with open(map_file_path, "r") as map_file:
+            return json.load(map_file)
+    return {}
 
 def get_activity_history():
     url = 'https://xbl.io/api/v2/activity/history'
@@ -35,13 +44,12 @@ def get_activity_history():
         print(f"Error: {response.status_code}")
         return None
 
-
-import os
-from pathlib import Path
-
-def download_media(activity_history):
+def download_media(activity_history, map_file_path):
     download_folder = Path("downloaded_media")
     download_folder.mkdir(exist_ok=True)
+
+    # Load the existing map to check for already processed files
+    mapping = load_map_file(map_file_path)
 
     for item in activity_history:
         if 'clipId' in item:
@@ -53,6 +61,11 @@ def download_media(activity_history):
             url = item['screenshotUri']
             file_extension = '.png'
         else:
+            continue
+
+        # Skip downloading if the file is already processed in the map
+        if file_id + file_extension in mapping:
+            print(f"File {file_id}{file_extension} already processed, skipping download.")
             continue
 
         file_name = f"{file_id}{file_extension}"
@@ -73,16 +86,17 @@ def download_media(activity_history):
 # Usage
 activity_history = get_activity_history()
 if activity_history:
-    download_media(activity_history)
+    map_file_path = "video_map.json"
+    download_media(activity_history, map_file_path)
     
     # Import and run the convertFiles script
     import convertFiles
     
     # Define the directories
-    originals_dir = "downloaded_media/"
-    converted_dir = "streaming_files/"
-    thumbnail_dir = "thumbnails/"
-    map_file_path = "video_map.json"
+    originals_dir = "/mnt/ebs/downloaded_media/"
+    converted_dir = "/mnt/ebs/streaming_files/"
+    thumbnail_dir = "/mnt/ebs/thumbnails/"
+    
     # Process and convert videos, generate thumbnails
     convertFiles.process_videos(originals_dir, converted_dir, thumbnail_dir, map_file_path)
 else:
