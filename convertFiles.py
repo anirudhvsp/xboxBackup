@@ -17,33 +17,58 @@ def save_map_file(map_file_path, mapping):
 def convert_to_adaptive_hls(input_file, output_dir):
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
+    # Full path to ffmpeg
+    ffmpeg_path = "/usr/bin/ffmpeg"  # Use 'which ffmpeg' to get the full path
+    
     ffmpeg_command = [
-        "ffmpeg", "-i", input_file,
-        # (ffmpeg command remains the same as before) ...
+        ffmpeg_path, "-i", input_file,
+        "-filter_complex", "[0:v]split=4[v1][v2][v3][v4]; [v1]scale=w=1280:h=720[v1out]; [v2]scale=w=854:h=480[v2out]; [v3]scale=w=640:h=360[v3out]; [v4]scale=w=426:h=240[v4out]",
+        "-map", "[v1out]", "-c:v:0", "libx264", "-preset", "veryfast", "-b:v:0", "2000k", "-maxrate:v:0", "2200k", "-bufsize:v:0", "3000k", "-g", "60",
+        "-map", "[v2out]", "-c:v:1", "libx264", "-preset", "veryfast", "-b:v:1", "1000k", "-maxrate:v:1", "1100k", "-bufsize:v:1", "1500k", "-g", "60",
+        "-map", "[v3out]", "-c:v:2", "libx264", "-preset", "veryfast", "-b:v:2", "700k", "-maxrate:v:2", "800k", "-bufsize:v:2", "1000k", "-g", "60",
+        "-map", "[v4out]", "-c:v:3", "libx264", "-preset", "veryfast", "-b:v:3", "400k", "-maxrate:v:3", "500k", "-bufsize:v:3", "700k", "-g", "60",
+        "-map", "a:0", "-c:a", "aac", "-b:a:0", "128k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:1", "96k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:2", "64k", "-ac", "2",
+        "-map", "a:0", "-c:a", "aac", "-b:a:3", "48k", "-ac", "2",
+        "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_flags", "independent_segments",
+        "-hls_segment_type", "mpegts", "-hls_segment_filename", f"{output_dir}/stream_%v/data%03d.ts",
+        "-master_pl_name", "master.m3u8", "-var_stream_map", "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3",
+        f"{output_dir}/stream_%v/playlist.m3u8"
     ]
     
     try:
-        subprocess.run(ffmpeg_command, check=True)
+        result = subprocess.run(ffmpeg_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"Conversion complete: {output_dir}")
+        print(result.stdout.decode())  # Print the stdout for debugging
+        print(result.stderr.decode())  # Print the stderr for any error details
     except subprocess.CalledProcessError as e:
         print(f"Error during conversion: {e}")
+        print(f"Error output: {e.stderr.decode()}")
 
 def generate_thumbnail(input_file, output_dir, thumbnail_name):
     thumbnail_path = os.path.join(output_dir, f"{thumbnail_name}.jpg")
     if not os.path.exists(thumbnail_path):
         print(f"Generating thumbnail for {input_file}...")
+        
+        # Full path to ffmpeg
+        ffmpeg_path = "/usr/bin/ffmpeg"
+        
         ffmpeg_command = [
-            "ffmpeg", "-i", input_file,
+            ffmpeg_path, "-i", input_file,
             "-ss", "00:00:01",
             "-vframes", "1",
             "-vf", "scale=320:-1",
             thumbnail_path
         ]
         try:
-            subprocess.run(ffmpeg_command, check=True)
+            result = subprocess.run(ffmpeg_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             print(f"Thumbnail generated: {thumbnail_path}")
+            print(result.stdout.decode())
+            print(result.stderr.decode())
         except subprocess.CalledProcessError as e:
             print(f"Error generating thumbnail: {e}")
+            print(f"Error output: {e.stderr.decode()}")
     else:
         print(f"Thumbnail already exists: {thumbnail_path}, skipping generation.")
 
@@ -53,7 +78,7 @@ def get_creation_date(file_path):
 def process_single_video(input_file, output_dir, thumbnail_dir, new_folder_name, mapping, map_file_path):
     output_folder = os.path.join(output_dir, new_folder_name)
     thumbnail_name = new_folder_name
-    input_file_name_cut = input_file.replace("downloaded_media/","")
+    input_file_name_cut = input_file.replace("/mnt/ebs/downloaded_media/","")
     
     if input_file_name_cut in mapping:
         print(f"Video {input_file_name_cut} already processed, skipping.")
