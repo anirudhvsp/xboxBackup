@@ -45,7 +45,7 @@ def get_activity_history():
         return None
 
 def download_media(activity_history, map_file_path):
-    download_folder = Path("downloaded_media")
+    download_folder = Path("/mnt/ebs/downloaded_media/")
     download_folder.mkdir(exist_ok=True)
 
     # Load the existing map to check for already processed files
