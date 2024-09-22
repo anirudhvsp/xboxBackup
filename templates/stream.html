@@ -343,7 +343,7 @@
                     let downloadedSegments = 0;
 
                     playlist.segments.forEach((segment, index) => {
-                        const segmentUrl = new URL(segment.uri, baseUrl).href;
+                        const segmentUrl = new URL(`stream_0/${segment.uri}`, baseUrl).href;
                         console.log(`Fetching segment ${index + 1}/${totalSegments}:`, segmentUrl);
                         fetch(segmentUrl)
                             .then(response => response.blob())
