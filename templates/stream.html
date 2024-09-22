@@ -314,33 +314,41 @@
         function downloadVideoForOffline(videoUrl, progressBar, progressText) {
             console.log('Starting download for:', videoUrl);
             fetch(videoUrl)
-                .then(response => {
-                    console.log('Fetched master playlist, status:', response.status);
-                    return response.text();
-                })
+                .then(response => response.text())
                 .then(master => {
                     console.log('Master playlist content:', master);
                     const parser = new m3u8Parser.Parser();
                     parser.push(master);
                     parser.end();
+                    const masterPlaylist = parser.manifest;
+                    
+                    // Get the highest quality stream (usually the first one)
+                    const highQualityStream = masterPlaylist.playlists[0];
+                    const playlistUrl = new URL(highQualityStream.uri, videoUrl).href;
+                    
+                    console.log('Fetching high quality playlist:', playlistUrl);
+                    return fetch(playlistUrl);
+                })
+                .then(response => response.text())
+                .then(playlistContent => {
+                    console.log('Playlist content:', playlistContent);
+                    const parser = new m3u8Parser.Parser();
+                    parser.push(playlistContent);
+                    parser.end();
                     const playlist = parser.manifest;
-                    console.log('Parsed playlist:', playlist);
                     
                     const totalSegments = playlist.segments.length;
                     console.log('Total segments to download:', totalSegments);
                     let downloadedSegments = 0;
 
                     playlist.segments.forEach((segment, index) => {
-                        console.log(`Fetching segment ${index + 1}/${totalSegments}:`, segment.uri);
-                        fetch(segment.uri)
-                            .then(response => {
-                                console.log(`Segment ${index + 1} fetched, status:`, response.status);
-                                return response.blob();
-                            })
+                        const segmentUrl = new URL(segment.uri, videoUrl).href;
+                        console.log(`Fetching segment ${index + 1}/${totalSegments}:`, segmentUrl);
+                        fetch(segmentUrl)
+                            .then(response => response.blob())
                             .then(blob => {
-                                console.log(`Segment ${index + 1} blob size:`, blob.size);
                                 caches.open('video-cache').then(cache => {
-                                    cache.put(segment.uri, new Response(blob));
+                                    cache.put(segmentUrl, new Response(blob));
                                     downloadedSegments++;
                                     const progress = (downloadedSegments / totalSegments) * 100;
                                     console.log(`Progress: ${progress.toFixed(2)}%`);
@@ -354,9 +362,10 @@
                     });
                 })
                 .catch(error => {
-                    console.error('Error fetching or parsing master playlist:', error);
+                    console.error('Error fetching or parsing playlists:', error);
                 });
         }
+
     </script>
   </body>
 </html>
