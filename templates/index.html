@@ -3,25 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="manifest" href="/static/manifest.json" />
+    <!-- <link rel="manifest" href="/static/manifest.json" />
     <meta name="theme-color" content="#121212" />
-    <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png" /> -->
 
     <title>Xbox Media</title>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
     <script>
-      // Ensure head element is available
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/static/service-worker.js")
-          .then((registration) =>
-            console.log("ServiceWorker registered: ", registration.scope)
-          )
-          .catch((error) =>
-            console.log("ServiceWorker registration failed: ", error)
-          );
-      });
+    //   // Ensure head element is available
+    //   window.addEventListener("load", () => {
+    //     navigator.serviceWorker
+    //       .register("/static/service-worker.js")
+    //       .then((registration) =>
+    //         console.log("ServiceWorker registered: ", registration.scope)
+    //       )
+    //       .catch((error) =>
+    //         console.log("ServiceWorker registration failed: ", error)
+    //       );
+    //   });
       if (!document.head) {
         document.head = document.createElement("head");
         document.documentElement.insertBefore(document.head, document.body);
