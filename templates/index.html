@@ -194,5 +194,11 @@
             document.body.style.paddingBottom = '0';
         }
     });
+    document.body.addEventListener('htmx:sendError', function(event) {
+    if (!navigator.onLine) {
+      event.detail.xhr.abort();
+      alert('You are offline. This action requires an internet connection.');
+    }
+  });
 </script>
 </html>
