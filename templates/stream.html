@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
     <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
     <style>
       :root {
@@ -310,14 +311,14 @@
           downloadVideoForOffline(videoUrl, progressBar, progressText);
         });
 
-      function downloadVideoForOffline(videoUrl, progressBar, progressText) {
+        function downloadVideoForOffline(videoUrl, progressBar, progressText) {
         fetch(videoUrl)
-          .then((response) => response.text())
-          .then((master) => {
-            const parser = new m3u8Parser.Parser();
-            parser.push(master);
-            parser.end();
-            const playlist = parser.manifest;
+            .then(response => response.text())
+            .then(master => {
+                const parser = new m3u8Parser.Parser();
+                parser.push(master);
+                parser.end();
+                const playlist = parser.manifest;
 
             const totalSegments = playlist.segments.length;
             let downloadedSegments = 0;
