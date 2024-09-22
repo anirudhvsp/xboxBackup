@@ -438,13 +438,15 @@
                 });
 
                 const updateProgress = () => {
-                  downloadedSegments++;
-                  const progress = (downloadedSegments / totalSegments) * 100;
-                  progressBar.value = progress;
-                  progressText.textContent = `${Math.round(progress)}%`;
-                  if (downloadedSegments < totalSegments) {
-                    setTimeout(updateProgress, 100);
-                  }
+                    downloadedSegments++;
+                    if (totalSegments > 0) {
+                        const progress = (downloadedSegments / totalSegments) * 100;
+                        progressBar.value = Math.min(100, Math.max(0, progress)); // Ensure value is between 0 and 100
+                        progressText.textContent = `${Math.round(progress)}%`;
+                    }
+                    if (downloadedSegments < totalSegments) {
+                        setTimeout(updateProgress, 100);
+                    }
                 };
 
                 updateProgress();
