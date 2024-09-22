@@ -313,7 +313,7 @@
 
         function downloadVideoForOffline(videoUrl, progressBar, progressText) {
             console.log('Starting download for:', videoUrl);
-            const baseUrl = new URL(videoUrl).origin + '/static/{{ video_name }}/';
+            const baseUrl = new URL(videoUrl, window.location.href).href;
 
             fetch(videoUrl)
                 .then(response => response.text())
