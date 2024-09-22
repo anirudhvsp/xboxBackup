@@ -313,6 +313,8 @@
 
         function downloadVideoForOffline(videoUrl, progressBar, progressText) {
             console.log('Starting download for:', videoUrl);
+            const baseUrl = new URL(videoUrl).origin + '/static/{{ video_name }}/';
+
             fetch(videoUrl)
                 .then(response => response.text())
                 .then(master => {
@@ -322,9 +324,8 @@
                     parser.end();
                     const masterPlaylist = parser.manifest;
                     
-                    // Get the highest quality stream (usually the first one)
                     const highQualityStream = masterPlaylist.playlists[0];
-                    const playlistUrl = new URL(highQualityStream.uri, videoUrl).href;
+                    const playlistUrl = new URL(highQualityStream.uri, baseUrl).href;
                     
                     console.log('Fetching high quality playlist:', playlistUrl);
                     return fetch(playlistUrl);
@@ -342,7 +343,7 @@
                     let downloadedSegments = 0;
 
                     playlist.segments.forEach((segment, index) => {
-                        const segmentUrl = new URL(segment.uri, videoUrl).href;
+                        const segmentUrl = new URL(segment.uri, baseUrl).href;
                         console.log(`Fetching segment ${index + 1}/${totalSegments}:`, segmentUrl);
                         fetch(segmentUrl)
                             .then(response => response.blob())
