@@ -178,11 +178,11 @@
         </div>
 
         <div class="controls">
-            <a href="/home/download/{{ video_name }}" download>
-                <button id="downloadVid">
-                    Download in HD
-                </button>
-            </a>
+            <button id="offlineDownload">Download for Offline Viewing</button>
+            <div id="downloadProgress" style="display: none;">
+                <progress id="progressBar" value="0" max="100"></progress>
+                <span id="progressText">0%</span>
+            </div>
         </div>
     </div>
     <script>
@@ -208,30 +208,61 @@
             };
 
             let player, hls;
-
-            function initializePlayer() {
-                console.log("Initializing player...");
-                if (Hls.isSupported()) {
-                    console.log("HLS is supported.");
-                    hls = new Hls();
-                    hls.loadSource(source);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                        const availableQualities = hls.levels.map((l) => l.height);
-                        defaultOptions.quality.options = ['auto', ...availableQualities];
-                        defaultOptions.quality.default = 'auto'; // Set default to auto
-                        player = new Plyr(video, defaultOptions);
-                        console.log("Player initialized.");
-                        hideLoader();
-                    });
-                    hls.attachMedia(video);
-                    window.hls = hls;
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = source;
-                    player = new Plyr(video, defaultOptions);
-                    console.log("Player initialized.");
-                    hideLoader();
-                }
-            }
+              function initializePlayer() {
+                  if (Hls.isSupported()) {
+                      hls = new Hls({
+                          loader: class extends Hls.DefaultConfig.loader {
+                              load(context, config, callbacks) {
+                                  const loader = new Hls.DefaultConfig.loader(context, config, callbacks);
+                                  const load = loader.load.bind(loader);
+                                  loader.load = function(context, config, callbacks) {
+                                      caches.match(context.url).then(response => {
+                                          if (response) {
+                                              const reader = response.body.getReader();
+                                              const stream = new ReadableStream({
+                                                  start(controller) {
+                                                      function push() {
+                                                          reader.read().then(({ done, value }) => {
+                                                              if (done) {
+                                                                  controller.close();
+                                                                  return;
+                                                              }
+                                                              controller.enqueue(value);
+                                                              push();
+                                                          });
+                                                      }
+                                                      push();
+                                                  }
+                                              });
+                                              const newResponse = new Response(stream, { headers: response.headers });
+                                              callbacks.onSuccess({ url: context.url, data: newResponse });
+                                          } else {
+                                              load(context, config, callbacks);
+                                          }
+                                      });
+                                  };
+                                  return loader;
+                              }
+                          }
+                      });
+                      hls.loadSource(source);
+                      hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                          const availableQualities = hls.levels.map((l) => l.height);
+                          defaultOptions.quality.options = ['auto', ...availableQualities];
+                          defaultOptions.quality.default = 'auto'; // Set default to auto
+                          player = new Plyr(video, defaultOptions);
+                          console.log("Player initialized.");
+                          hideLoader();
+                      });
+                      hls.attachMedia(video);
+                      window.hls = hls;
+                  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                      video.src = source;
+                      player = new Plyr(video, defaultOptions);
+                      console.log("Player initialized.");
+                      hideLoader();
+                  }
+              }
 
             function hideLoader() {
                 loader.remove();
@@ -297,6 +328,44 @@
                 document.body.style.paddingTop = '0';
                 document.body.style.paddingBottom = '0';
             });
+
+            document.getElementById('offlineDownload').addEventListener('click', function() {
+    const videoUrl = '/static/{{ video_name }}/master.m3u8';
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    document.getElementById('downloadProgress').style.display = 'block';
+
+    downloadVideoForOffline(videoUrl, progressBar, progressText);
+});
+
+function downloadVideoForOffline(videoUrl, progressBar, progressText) {
+    fetch(videoUrl)
+        .then(response => response.text())
+        .then(master => {
+            const parser = new m3u8Parser.Parser();
+            parser.push(master);
+            parser.end();
+            const playlist = parser.manifest;
+            
+            const totalSegments = playlist.segments.length;
+            let downloadedSegments = 0;
+
+            playlist.segments.forEach(segment => {
+                fetch(segment.uri)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        caches.open('video-cache').then(cache => {
+                            cache.put(segment.uri, new Response(blob));
+                            downloadedSegments++;
+                            const progress = (downloadedSegments / totalSegments) * 100;
+                            progressBar.value = progress;
+                            progressText.textContent = `${Math.round(progress)}%`;
+                        });
+                    });
+            });
+        });
+}
+
     </script>
 </body>
 </html>
