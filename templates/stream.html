@@ -208,61 +208,30 @@
             };
 
             let player, hls;
-              function initializePlayer() {
-                  if (Hls.isSupported()) {
-                      hls = new Hls({
-                          loader: class extends Hls.DefaultConfig.loader {
-                              load(context, config, callbacks) {
-                                  const loader = new Hls.DefaultConfig.loader(context, config, callbacks);
-                                  const load = loader.load.bind(loader);
-                                  loader.load = function(context, config, callbacks) {
-                                      caches.match(context.url).then(response => {
-                                          if (response) {
-                                              const reader = response.body.getReader();
-                                              const stream = new ReadableStream({
-                                                  start(controller) {
-                                                      function push() {
-                                                          reader.read().then(({ done, value }) => {
-                                                              if (done) {
-                                                                  controller.close();
-                                                                  return;
-                                                              }
-                                                              controller.enqueue(value);
-                                                              push();
-                                                          });
-                                                      }
-                                                      push();
-                                                  }
-                                              });
-                                              const newResponse = new Response(stream, { headers: response.headers });
-                                              callbacks.onSuccess({ url: context.url, data: newResponse });
-                                          } else {
-                                              load(context, config, callbacks);
-                                          }
-                                      });
-                                  };
-                                  return loader;
-                              }
-                          }
-                      });
-                      hls.loadSource(source);
-                      hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                          const availableQualities = hls.levels.map((l) => l.height);
-                          defaultOptions.quality.options = ['auto', ...availableQualities];
-                          defaultOptions.quality.default = 'auto'; // Set default to auto
-                          player = new Plyr(video, defaultOptions);
-                          console.log("Player initialized.");
-                          hideLoader();
-                      });
-                      hls.attachMedia(video);
-                      window.hls = hls;
-                  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                      video.src = source;
-                      player = new Plyr(video, defaultOptions);
-                      console.log("Player initialized.");
-                      hideLoader();
-                  }
-              }
+
+            function initializePlayer() {
+                console.log("Initializing player...");
+                if (Hls.isSupported()) {
+                    console.log("HLS is supported.");
+                    hls = new Hls();
+                    hls.loadSource(source);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                        const availableQualities = hls.levels.map((l) => l.height);
+                        defaultOptions.quality.options = ['auto', ...availableQualities];
+                        defaultOptions.quality.default = 'auto'; // Set default to auto
+                        player = new Plyr(video, defaultOptions);
+                        console.log("Player initialized.");
+                        hideLoader();
+                    });
+                    hls.attachMedia(video);
+                    window.hls = hls;
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = source;
+                    player = new Plyr(video, defaultOptions);
+                    console.log("Player initialized.");
+                    hideLoader();
+                }
+            }
 
             function hideLoader() {
                 loader.remove();
