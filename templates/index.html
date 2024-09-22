@@ -1,204 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#121212">
-    <link rel="apple-touch-icon" href="/static/icon-192x192.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/static/manifest.json" />
+    <meta name="theme-color" content="#121212" />
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
 
     <title>Xbox Media</title>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
     <script>
-        // Ensure head element is available
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/static/service-worker.js')
-            .then((registration) => console.log('ServiceWorker registered: ', registration.scope))
-            .catch((error) => console.log('ServiceWorker registration failed: ', error));
-        });
-        if (!document.head) {
-            document.head = document.createElement('head');
-            document.documentElement.insertBefore(document.head, document.body);
-        }
+      // Ensure head element is available
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/static/service-worker.js")
+          .then((registration) =>
+            console.log("ServiceWorker registered: ", registration.scope)
+          )
+          .catch((error) =>
+            console.log("ServiceWorker registration failed: ", error)
+          );
+      });
+      if (!document.head) {
+        document.head = document.createElement("head");
+        document.documentElement.insertBefore(document.head, document.body);
+      }
     </script>
     <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
+      :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --tile-bg: #f0f0f0;
+      }
+
+      @media (prefers-color-scheme: dark) {
         :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --tile-bg: #f0f0f0;
+          --bg-color: #121212;
+          --text-color: #ffffff;
+          --tile-bg: #1e1e1e;
         }
-    
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #121212;
-                --text-color: #ffffff;
-                --tile-bg: #1e1e1e;
-            }
-        }
-    
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-            padding: 0;
-        }
-    
-        body.no-scroll {
-            overflow: hidden;
-        }
-    
-        main {
-            flex: 1;
-            overflow-y: auto;
-        }
-    
-        #media-container {
-            height: 100%;
-        }
-              .media-grid {
-                  display: grid;
-                  gap: 8px;
-                  padding: 8px;
-                  grid-template-columns: repeat(3, 1fr);
-              }
+      }
 
-              @media (min-width: 768px) {
-                  .media-grid {
-                      grid-template-columns: repeat(6, 1fr);
-                  }
-              }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+      }
 
-              @media (min-width: 1024px) {
-                  .media-grid {
-                      grid-template-columns: repeat(9, 1fr);
-                  }
-              }
+      body.no-scroll {
+        overflow: hidden;
+      }
 
-              @media (min-width: 1440px) {
-                  .media-grid {
-                      grid-template-columns: repeat(12, 1fr);
-                  }
-              }
-        .media-grid-page {
-            padding: 20px;
+      main {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      #media-container {
+        height: 100%;
+      }
+      .media-grid {
+        display: grid;
+        gap: 8px;
+        padding: 8px;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (min-width: 768px) {
+        .media-grid {
+          grid-template-columns: repeat(6, 1fr);
         }
-              .media-tile {
-                  text-align: center;
-                  background-color: var(--tile-bg);
-                  padding: 2px; /* Reduced padding for thinner borders */
-                  border-radius: 8px;
-                  position: relative;
-                  overflow: hidden;
-              }
-    
-              .media-tile img {
-                  max-width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  object-position: center; /* Centers the image */
-                  min-height: 180px;
-                  background-color: var(--tile-bg);
-                  opacity: 0;
-                  transition: opacity 0.3s ease-in-out;
-                  border-radius: 6px;
-              }
-    
-        .media-tile.loading::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: loading 1.5s infinite;
+      }
+
+      @media (min-width: 1024px) {
+        .media-grid {
+          grid-template-columns: repeat(9, 1fr);
         }
-    
-        .media-tile img {
-            max-width: 100%;
-            height: auto;
-            min-height: 150px;
-            background-color: var(--tile-bg);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
+      }
+
+      @media (min-width: 1440px) {
+        .media-grid {
+          grid-template-columns: repeat(12, 1fr);
         }
-    
-        .media-tile img.loaded {
-            opacity: 1;
+      }
+      .media-grid-page {
+        padding: 20px;
+      }
+      .media-tile {
+        text-align: center;
+        background-color: var(--tile-bg);
+        padding: 2px; /* Reduced padding for thinner borders */
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .media-tile img {
+        max-width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center; /* Centers the image */
+        min-height: 180px;
+        background-color: var(--tile-bg);
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        border-radius: 6px;
+      }
+
+      .media-tile.loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        animation: loading 1.5s infinite;
+      }
+
+      .media-tile img {
+        max-width: 100%;
+        height: auto;
+        min-height: 150px;
+        background-color: var(--tile-bg);
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .media-tile img.loaded {
+        opacity: 1;
+      }
+
+      .trigger {
+        height: 1px;
+        margin: 0;
+        padding: 0;
+        visibility: hidden;
+      }
+
+      @keyframes loading {
+        0% {
+          transform: translateX(-100%);
         }
-    
-        .trigger {
-            height: 1px;
-            margin: 0;
-            padding: 0;
-            visibility: hidden;
+        100% {
+          transform: translateX(100%);
         }
-    
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+      }
+
+      .initial-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-    
-        .initial-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
+        100% {
+          transform: rotate(360deg);
         }
-    
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-    
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body hx-ext="head-support">
+  </head>
+  <body hx-ext="head-support">
     <header>
-        <h1>Xbox Media</h1>
+      <h1>Xbox Media</h1>
     </header>
     <main>
-        <section id="media-container">
-            <div id="media-content" hx-get="/media_page/1" hx-trigger="load" hx-swap="innerHTML">
-                <div class="initial-loading">
-                    <div class="loading-spinner"></div>
-                    <p>Loading media...</p>
-                </div>
-            </div>
-        </section>
+      <section id="media-container">
+        <div
+          id="media-content"
+          hx-get="/media_page/1"
+          hx-trigger="load"
+          hx-swap="innerHTML"
+        >
+          <div class="initial-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading media...</p>
+          </div>
+        </div>
+      </section>
     </main>
     <footer>
-        <p>2024 Xbox Streaming App <a href="https://github.com/anirudhvsp">Github</a></p>
+      <p>
+        2024 Xbox Streaming App
+        <a href="https://github.com/anirudhvsp">Github</a>
+      </p>
     </footer>
     <!-- ... rest of the file ... -->
-</body>
-<script>
-    document.body.addEventListener('htmx:beforeOnLoad', function(event) {
-        if (event.detail.xhr.getResponseHeader('X-Reset-Body-Padding')) {
-            document.body.style.paddingTop = '0';
-            document.body.style.paddingBottom = '0';
-        }
+  </body>
+  <script>
+    document.body.addEventListener("htmx:beforeOnLoad", function (event) {
+      if (event.detail.xhr.getResponseHeader("X-Reset-Body-Padding")) {
+        document.body.style.paddingTop = "0";
+        document.body.style.paddingBottom = "0";
+      }
     });
-    document.body.addEventListener('htmx:sendError', function(event) {
-    if (!navigator.onLine) {
-      event.detail.xhr.abort();
-      alert('You are offline. This action requires an internet connection.');
-    }
-  });
-</script>
+    document.body.addEventListener("htmx:sendError", function (event) {
+      if (!navigator.onLine) {
+        event.detail.xhr.abort();
+        alert("You are offline. This action requires an internet connection.");
+      }
+    });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/service-worker.js')
+        .then((registration) => {
+            console.log('ServiceWorker registered: ', registration.scope);
+            registration.update();
+        })
+        .catch((error) => console.log('ServiceWorker registration failed: ', error));
+    });   
+  </script>
 </html>
