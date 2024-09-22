@@ -161,16 +161,16 @@
       }
       .download-container {
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
         width: 100%;
       }
 
       #offlineDownload,
-      #deleteOffline,
-      #downloadProgress {
-        width: 100%;
+      #deleteOffline {
+        width: 48%;
         height: 50px;
-        margin: 5px 0;
+        margin: 0;
         border-radius: 0;
         background-color: var(--button-bg);
         color: var(--button-text);
@@ -179,16 +179,9 @@
         font-size: 16px;
       }
 
-      #offlineDownload:hover,
-      #deleteOffline:hover {
-        background-color: var(--button-hover-bg);
-        color: var(--button-hover-text);
-      }
-
       #downloadProgress {
+        width: 48%;
         display: none;
-        height: auto;
-        padding: 10px;
       }
 
       #progressBar {
@@ -468,18 +461,20 @@
                       });
                   })
                 ).then(() => {
-                  metadataCache.put(
-                    videoName,
-                    new Response(JSON.stringify({ cached: true }))
-                  );
-                  alert("Video successfully cached for offline viewing.");
-                  updateOfflineStatus(videoName);
+                  metadataCache
+                    .put(
+                      videoName,
+                      new Response(JSON.stringify({ cached: true }))
+                    )
+                    .then(() => {
+                      alert("Video successfully cached for offline viewing.");
+                      updateOfflineStatus(videoName);
+                    });
                 });
               });
           });
         });
       }
-
       function updateProgress(
         downloadedSegments,
         totalSegments,
