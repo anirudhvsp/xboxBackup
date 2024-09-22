@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Video Player</title>
     <script src="https://unpkg.com/htmx.org@1.9.2"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
@@ -10,331 +10,348 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
     <style>
-        :root {
-            --bg-color: #121212;
-            --text-color: #ffffff;
-            --button-bg: #333333;
-            --button-text: #ffffff;
-            --button-hover-bg: #444444;
-            --button-hover-text: #ffffff;
-        }
+      :root {
+        --bg-color: #121212;
+        --text-color: #ffffff;
+        --button-bg: #333333;
+        --button-text: #ffffff;
+        --button-hover-bg: #444444;
+        --button-hover-text: #ffffff;
+      }
 
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding-top: 33vh;
+        padding-bottom: 50px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .video-container {
+        width: 100%;
+        height: calc(33vh - 50px);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+      }
+
+      .video-wrapper {
+        width: 100%;
+        height: 100%;
+      }
+
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1001;
+      }
+
+      #downloadVid {
+        width: 100%;
+        height: 50px;
+        margin: 0;
+        border-radius: 0;
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      #downloadVid:hover {
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
+      }
+
+      #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .spinner {
+        border: 5px solid var(--button-bg);
+        border-top: 5px solid var(--button-text);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 50px;
+        left: 0;
+        width: 100%;
+        z-index: 1001;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      #backToHome,
+      #tiktokView {
+        width: 48%;
+        height: 50px;
+        margin: 0;
+        border-radius: 0;
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      #backToHome:hover,
+      #tiktokView:hover {
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
+      }
+
+      @media (min-width: 768px) {
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding-top: 33vh;
-            padding-bottom: 50px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+          padding-top: 70vh;
+          padding-bottom: 50px;
         }
 
         .video-container {
-            width: 100%;
-            height: calc(33vh - 50px);
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-        }
-
-        .video-wrapper {
-            width: 100%;
-            height: 100%;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+          width: 70%;
+          height: calc(70vh - 50px);
+          left: 15%;
         }
 
         .controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1001;
-        }
-
-        #downloadVid {
-            width: 100%;
-            height: 50px;
-            margin: 0;
-            border-radius: 0;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #downloadVid:hover {
-            background-color: var(--button-hover-bg);
-            color: var(--button-hover-text);
-        }
-
-        #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .spinner {
-            border: 5px solid var(--button-bg);
-            border-top: 5px solid var(--button-text);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+          width: 70%;
+          left: 15%;
         }
 
         .navigation {
-            position: fixed;
-            bottom: 50px;
-            left: 0;
-            width: 100%;
-            z-index: 1001;
-            display: flex;
-            justify-content: space-between;
+          width: 70%;
+          left: 15%;
         }
-
-        #backToHome, #tiktokView {
-            width: 48%;
-            height: 50px;
-            margin: 0;
-            border-radius: 0;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #backToHome:hover, #tiktokView:hover {
-            background-color: var(--button-hover-bg);
-            color: var(--button-hover-text);
-        }
-
-
-        @media (min-width: 768px) {
-            body {
-                padding-top: 70vh;
-                padding-bottom: 50px;
-            }
-
-            .video-container {
-                width: 70%;
-                height: calc(70vh - 50px);
-                left: 15%;
-            }
-
-            .controls {
-                width: 70%;
-                left: 15%;
-            }
-
-            .navigation {
-                width: 70%;
-                left: 15%;
-            }
-
-        }
+      }
     </style>
-</head>
-<body hx-ext="head-support">
+  </head>
+  <body hx-ext="head-support">
     <div id="loader">
-        <div class="spinner"></div>
+      <div class="spinner"></div>
     </div>
 
-    <div id="videoContainer" style="display: none;">
-        <div class="video-container">
-            <div class="video-wrapper">
-                <video id="player" playsinline controls></video>
-            </div>
+    <div id="videoContainer" style="display: none">
+      <div class="video-container">
+        <div class="video-wrapper">
+          <video id="player" playsinline controls></video>
         </div>
-        <!-- Add this right before the .controls div -->
-        <div class="navigation">
-            <button id="backToHome" onclick="window.location.href='/home'">
-                Back to Home
-            </button>
-            <button id="tiktokView" onclick="window.location.href='/brainrot/{{ video_name }}'">
-                BrainRot Mode
-            </button>
-        </div>
+      </div>
+      <!-- Add this right before the .controls div -->
+      <div class="navigation">
+        <button id="backToHome" onclick="window.location.href='/home'">
+          Back to Home
+        </button>
+        <button
+          id="tiktokView"
+          onclick="window.location.href='/brainrot/{{ video_name }}'"
+        >
+          BrainRot Mode
+        </button>
+      </div>
 
-        <div class="controls">
-            <button id="offlineDownload">Download for Offline Viewing</button>
-            <div id="downloadProgress" style="display: none;">
-                <progress id="progressBar" value="0" max="100"></progress>
-                <span id="progressText">0%</span>
-            </div>
+      <div class="controls">
+        <button id="offlineDownload">Download for Offline Viewing</button>
+        <div id="downloadProgress" style="display: none">
+          <progress id="progressBar" value="0" max="100"></progress>
+          <span id="progressText">0%</span>
         </div>
+      </div>
     </div>
     <script>
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-            initializeVideoPlayer();
-        });
+      document.body.addEventListener("htmx:afterSwap", function (event) {
+        initializeVideoPlayer();
+      });
 
-        function initializeVideoPlayer() {
-            const source = '/static/{{ video_name }}/master.m3u8';
-            const video = document.querySelector('#player');
-            const loader = document.getElementById('loader');
-            const videoContainer = document.getElementById('videoContainer');
+      function initializeVideoPlayer() {
+        const source = "/static/{{ video_name }}/master.m3u8";
+        const video = document.querySelector("#player");
+        const loader = document.getElementById("loader");
+        const videoContainer = document.getElementById("videoContainer");
 
-            const defaultOptions = {
-                controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
-                settings: ['quality'],
-                quality: {
-                    default: 'auto',
-                    options: ['auto', 240, 360, 480],
-                    forced: true,
-                    onChange: (e) => updateQuality(e),
-                }
-            };
+        const defaultOptions = {
+          controls: [
+            "play",
+            "progress",
+            "current-time",
+            "mute",
+            "volume",
+            "settings",
+            "fullscreen",
+          ],
+          settings: ["quality"],
+          quality: {
+            default: "auto",
+            options: ["auto", 240, 360, 480],
+            forced: true,
+            onChange: (e) => updateQuality(e),
+          },
+        };
 
-            let player, hls;
+        let player, hls;
 
-            function initializePlayer() {
-                console.log("Initializing player...");
-                if (Hls.isSupported()) {
-                    console.log("HLS is supported.");
-                    hls = new Hls();
-                    hls.loadSource(source);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                        const availableQualities = hls.levels.map((l) => l.height);
-                        defaultOptions.quality.options = ['auto', ...availableQualities];
-                        defaultOptions.quality.default = 'auto'; // Set default to auto
-                        player = new Plyr(video, defaultOptions);
-                        console.log("Player initialized.");
-                        hideLoader();
-                    });
-                    hls.attachMedia(video);
-                    window.hls = hls;
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = source;
-                    player = new Plyr(video, defaultOptions);
-                    console.log("Player initialized.");
-                    hideLoader();
-                }
-            }
-
-            function hideLoader() {
-                loader.remove();
-                videoContainer.style.display = 'block';
-                videoContainer.style.display = 'block';
-            }
-
-            function updateQuality(newQuality) {
-                if (hls) {
-                    if (newQuality === 'auto') {
-                        hls.currentLevel = -1; // -1 enables auto quality mode
-                    } else {
-                        hls.levels.forEach((level, levelIndex) => {
-                            if (level.height === newQuality) {
-                                hls.currentLevel = levelIndex;
-                            }
-                        });
-                    }
-                }
-            }
-
-            initializePlayer();
-
-            // Clean up Plyr and Hls.js instances when the page is unloaded
-            window.addEventListener('beforeunload', () => {
-                if (player) {
-                    player.destroy();
-                }
-                if (hls) {
-                    hls.destroy();
-                }
+        function initializePlayer() {
+          console.log("Initializing player...");
+          if (Hls.isSupported()) {
+            console.log("HLS is supported.");
+            hls = new Hls();
+            hls.loadSource(source);
+            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+              const availableQualities = hls.levels.map((l) => l.height);
+              defaultOptions.quality.options = ["auto", ...availableQualities];
+              defaultOptions.quality.default = "auto"; // Set default to auto
+              player = new Plyr(video, defaultOptions);
+              console.log("Player initialized.");
+              hideLoader();
             });
+            hls.attachMedia(video);
+            window.hls = hls;
+          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+            video.src = source;
+            player = new Plyr(video, defaultOptions);
+            console.log("Player initialized.");
+            hideLoader();
+          }
         }
-            document.getElementById('downloadVid').addEventListener('click', function(e) {
-        const button = this;
-        const link = button.querySelector('a');
-        const originalText = link.textContent;
-    
-        link.textContent = "Downloading...";
-        button.disabled = true;
 
-        setTimeout(() => {
+        function hideLoader() {
+          loader.remove();
+          videoContainer.style.display = "block";
+          videoContainer.style.display = "block";
+        }
+
+        function updateQuality(newQuality) {
+          if (hls) {
+            if (newQuality === "auto") {
+              hls.currentLevel = -1; // -1 enables auto quality mode
+            } else {
+              hls.levels.forEach((level, levelIndex) => {
+                if (level.height === newQuality) {
+                  hls.currentLevel = levelIndex;
+                }
+              });
+            }
+          }
+        }
+
+        initializePlayer();
+
+        // Clean up Plyr and Hls.js instances when the page is unloaded
+        window.addEventListener("beforeunload", () => {
+          if (player) {
+            player.destroy();
+          }
+          if (hls) {
+            hls.destroy();
+          }
+        });
+      }
+      document
+        .getElementById("downloadVid")
+        .addEventListener("click", function (e) {
+          const button = this;
+          const link = button.querySelector("a");
+          const originalText = link.textContent;
+
+          link.textContent = "Downloading...";
+          button.disabled = true;
+
+          setTimeout(() => {
             link.textContent = originalText;
             button.disabled = false;
-        }, 5000);  // Reset button text after 5 seconds
-});        // Call the initialization function immediately
-        initializeVideoPlayer();
+          }, 5000); // Reset button text after 5 seconds
+        }); // Call the initialization function immediately
+      initializeVideoPlayer();
 
-        // Add this new function
-        function resetBodyPadding() {
-            document.body.style.paddingTop = '0';
-            document.body.style.paddingBottom = '0';
-        }
+      // Add this new function
+      function resetBodyPadding() {
+        document.body.style.paddingTop = "0";
+        document.body.style.paddingBottom = "0";
+      }
 
-            // Add this event listener
-            window.addEventListener('pagehide', function() {
-                resetBodyPadding();
-                document.body.dispatchEvent(new Event('streamPageUnloaded'));
-            });
+      // Add this event listener
+      window.addEventListener("pagehide", function () {
+        resetBodyPadding();
+        document.body.dispatchEvent(new Event("streamPageUnloaded"));
+      });
 
+      window.addEventListener("beforeunload", function () {
+        document.body.style.paddingTop = "0";
+        document.body.style.paddingBottom = "0";
+      });
 
-            window.addEventListener('beforeunload', function() {
-                document.body.style.paddingTop = '0';
-                document.body.style.paddingBottom = '0';
-            });
+      document
+        .getElementById("offlineDownload")
+        .addEventListener("click", function () {
+          const videoUrl = "/static/{{ video_name }}/master.m3u8";
+          const progressBar = document.getElementById("progressBar");
+          const progressText = document.getElementById("progressText");
+          document.getElementById("downloadProgress").style.display = "block";
 
-            document.getElementById('offlineDownload').addEventListener('click', function() {
-    const videoUrl = '/static/{{ video_name }}/master.m3u8';
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    document.getElementById('downloadProgress').style.display = 'block';
+          downloadVideoForOffline(videoUrl, progressBar, progressText);
+        });
 
-    downloadVideoForOffline(videoUrl, progressBar, progressText);
-});
-
-function downloadVideoForOffline(videoUrl, progressBar, progressText) {
-    fetch(videoUrl)
-        .then(response => response.text())
-        .then(master => {
+      function downloadVideoForOffline(videoUrl, progressBar, progressText) {
+        fetch(videoUrl)
+          .then((response) => response.text())
+          .then((master) => {
             const parser = new m3u8Parser.Parser();
             parser.push(master);
             parser.end();
             const playlist = parser.manifest;
-            
+
             const totalSegments = playlist.segments.length;
             let downloadedSegments = 0;
 
-            playlist.segments.forEach(segment => {
-                fetch(segment.uri)
-                    .then(response => response.blob())
-                    .then(blob => {
-                        caches.open('video-cache').then(cache => {
-                            cache.put(segment.uri, new Response(blob));
-                            downloadedSegments++;
-                            const progress = (downloadedSegments / totalSegments) * 100;
-                            progressBar.value = progress;
-                            progressText.textContent = `${Math.round(progress)}%`;
-                        });
-                    });
+            playlist.segments.forEach((segment) => {
+              fetch(segment.uri)
+                .then((response) => response.blob())
+                .then((blob) => {
+                  caches.open("video-cache").then((cache) => {
+                    cache.put(segment.uri, new Response(blob));
+                    downloadedSegments++;
+                    const progress = (downloadedSegments / totalSegments) * 100;
+                    progressBar.value = progress;
+                    progressText.textContent = `${Math.round(progress)}%`;
+                  });
+                });
             });
-        });
-}
-
+          });
+      }
     </script>
-</body>
+  </body>
 </html>
