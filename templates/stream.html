@@ -196,17 +196,18 @@
           BrainRot Mode
         </button>
       </div>
-
-      <div class="download-container">
-        <button id="offlineDownload">Download for Offline Viewing</button>
-        <button id="deleteOffline" style="display: none">
-          Delete Offline Video
-        </button>
-        <div id="downloadProgress" style="display: none">
-          <progress id="progressBar" value="0" max="100"></progress>
-          <span id="progressText">0%</span>
+      <div class="controls">
+        <div class="download-container">
+            <button id="offlineDownload">Download for Offline Viewing</button>
+            <button id="deleteOffline" style="display: none">
+            Delete Offline Video
+            </button>
+            <div id="downloadProgress" style="display: none">
+            <progress id="progressBar" value="0" max="100"></progress>
+            <span id="progressText">0%</span>
+            </div>
         </div>
-      </div>
+    </div>
     </div>
     <script>
       document.body.addEventListener("htmx:afterSwap", function (event) {
