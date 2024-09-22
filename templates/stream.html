@@ -280,21 +280,6 @@
           }
         });
       }
-      document
-        .getElementById("downloadVid")
-        .addEventListener("click", function (e) {
-          const button = this;
-          const link = button.querySelector("a");
-          const originalText = link.textContent;
-
-          link.textContent = "Downloading...";
-          button.disabled = true;
-
-          setTimeout(() => {
-            link.textContent = originalText;
-            button.disabled = false;
-          }, 5000); // Reset button text after 5 seconds
-        }); // Call the initialization function immediately
       initializeVideoPlayer();
 
       // Add this new function
