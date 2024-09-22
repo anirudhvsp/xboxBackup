@@ -390,11 +390,10 @@
 
       updateOfflineStatus("{{ video_name }}");
       function downloadVideoForOffline(videoUrl, progressBar, progressText) {
-        const baseUrl = new URL(videoUrl, window.location.href).href.replace(
-          "master.m3u8",
-          ""
-        );
+        const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
         const videoName = "{{ video_name }}";
+        let totalSegments = 0;
+        let downloadedSegments = 0;
 
         caches.open("video-metadata").then((metadataCache) => {
           metadataCache.match(videoName).then((cached) => {
@@ -411,15 +410,23 @@
                 parser.end();
                 const masterPlaylist = parser.manifest;
 
-                let totalSegments = 0;
-                let downloadedSegments = 0;
+                // Calculate total segments across all playlists
+                masterPlaylist.playlists.forEach((playlist, index) => {
+                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
+                  fetch(playlistUrl)
+                    .then((response) => response.text())
+                    .then((playlistContent) => {
+                      const playlistParser = new m3u8Parser.Parser();
+                      playlistParser.push(playlistContent);
+                      playlistParser.end();
+                      totalSegments += playlistParser.manifest.segments.length;
+                    });
+                });
 
+                // Download all playlists
                 Promise.all(
                   masterPlaylist.playlists.map((playlist, index) => {
-                    const playlistUrl = new URL(
-                      `stream_${index}/playlist.m3u8`,
-                      baseUrl
-                    ).href;
+                    const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
                     return fetch(playlistUrl)
                       .then((response) => response.text())
                       .then((playlistContent) => {
@@ -427,49 +434,30 @@
                         playlistParser.push(playlistContent);
                         playlistParser.end();
                         const segments = playlistParser.manifest.segments;
-                        totalSegments += segments.length;
 
                         return Promise.all(
                           segments.map((segment) => {
-                            const segmentUrl = new URL(
-                              `stream_${index}/${segment.uri}`,
-                              baseUrl
-                            ).href;
+                            const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
                             return fetch(segmentUrl)
                               .then((response) => response.blob())
                               .then((blob) => {
-                                return caches
-                                  .open("video-cache")
-                                  .then((cache) => {
-                                    return cache.put(
-                                      segmentUrl,
-                                      new Response(blob)
-                                    );
-                                  })
-                                  .then(() => {
-                                    downloadedSegments++;
-                                    updateProgress(
-                                      downloadedSegments,
-                                      totalSegments,
-                                      progressBar,
-                                      progressText
-                                    );
-                                  });
+                                return caches.open("video-cache").then((cache) => {
+                                  return cache.put(segmentUrl, new Response(blob));
+                                });
+                              })
+                              .then(() => {
+                                downloadedSegments++;
+                                updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
                               });
                           })
                         );
                       });
                   })
                 ).then(() => {
-                  metadataCache
-                    .put(
-                      videoName,
-                      new Response(JSON.stringify({ cached: true }))
-                    )
-                    .then(() => {
-                      alert("Video successfully cached for offline viewing.");
-                      updateOfflineStatus(videoName);
-                    });
+                  metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
+                    alert("Video successfully cached for offline viewing.");
+                    updateOfflineStatus(videoName);
+                  });
                 });
               });
           });
