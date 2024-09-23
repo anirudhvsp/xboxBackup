@@ -8,61 +8,76 @@
     <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
     <title>My Xbox Media Streaming App</title>
     <script>
-        const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
-        
-        window.addEventListener("load", () => {
-          if ("serviceWorker" in navigator) {
-            navigator.serviceWorker
-              .register("/static/service-worker.js")
-              .then((registration) => {
-                console.log("ServiceWorker registered: ", registration.scope);
-                return Notification.requestPermission();
-              })
-              .then((permission) => {
-                if (permission === "granted") {
-                  console.log("Notification permission granted.");
-                  return navigator.serviceWorker.ready;
-                } else {
-                  throw new Error("Permission not granted for Notification");
-                }
-              })
-              .then((registration) => {
-                return registration.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
-                });
-              })
-              .then((subscription) => {
-                return fetch('/subscribe', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    push_token: btoa(JSON.stringify(subscription))
-                  })
-                });
-              })
-              .then(response => response.json())
-              .then(data => {
-                console.log('Subscription successful:', data);
-              })
-              .catch((error) => {
-                console.error("Error during service worker registration or subscription: ", error);
+      const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+
+      window.addEventListener("load", () => {
+        console.log("Window loaded. Starting service worker registration...");
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/static/service-worker.js")
+            .then((registration) => {
+              console.log("ServiceWorker registered successfully with scope:", registration.scope);
+              console.log("Requesting Notification permission...");
+              return Notification.requestPermission();
+            })
+            .then((permission) => {
+              if (permission === "granted") {
+                console.log("Notification permission granted.");
+                return navigator.serviceWorker.ready;
+              } else {
+                throw new Error("Permission not granted for Notification");
+              }
+            })
+            .then((registration) => {
+              console.log("Service worker is ready. Subscribing to push notifications...");
+              return registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
               });
-          }
-        });
-      
-        // Utility function to convert VAPID key from base64 URL string to Uint8Array
-        function urlB64ToUint8Array(base64String) {
-          const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-          const base64 = (base64String + padding)
-            .replace(/-/g, "+")
-            .replace(/_/g, "/");
-          const rawData = window.atob(base64);
-          return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+            })
+            .then((subscription) => {
+              console.log("Push subscription object:", subscription);
+              const subscriptionJson = JSON.stringify(subscription);
+              console.log("Encoded push subscription (btoa):", btoa(subscriptionJson));
+
+              // Sending subscription to the server
+              return fetch('/subscribe', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  push_token: btoa(subscriptionJson)
+                })
+              });
+            })
+            .then(response => {
+              console.log('Response from /subscribe endpoint:', response);
+              return response.json();
+            })
+            .then(data => {
+              console.log('Subscription successful:', data);
+            })
+            .catch((error) => {
+              console.error("Error during service worker registration or subscription:", error);
+            });
+        } else {
+          console.warn("Service Worker not supported in this browser.");
         }
-      </script>
+      });
+
+      // Utility function to convert VAPID key from base64 URL string to Uint8Array
+      function urlB64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const output = Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+        console.log("Converted VAPID key to Uint8Array:", output);
+        return output;
+      }
+    </script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -109,7 +124,7 @@
     <div class="container">
       <h1>Welcome to My Xbox Media Streaming App</h1>
       <p>
-        Stream my xbox clips directly from my personal computer. visit
+        Stream my xbox clips directly from my personal computer. Visit
         <a href="https://github.com/anirudhvsp/xboxBackup">github</a> for more
         info
       </p>
