@@ -80,7 +80,7 @@ def media_page(page):
     all_videos.sort(key=lambda x: x['creation_date'], reverse=True)
 
     # Pagination logic (unchanged)
-    per_page = 18
+    per_page = 24
     start = (page - 1) * per_page
     end = page * per_page
 
