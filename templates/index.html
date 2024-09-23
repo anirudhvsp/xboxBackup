@@ -234,5 +234,25 @@
         })
         .catch((error) => console.log('ServiceWorker registration failed: ', error));
     });   
-  </script>
+    let lastPageHidden = Date.now();
+
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) {
+            // Page is now visible
+            const timeHidden = Date.now() - lastPageHidden;
+            if (timeHidden > 1000) {  // If page was hidden for more than 1 second
+                location.reload();
+            }
+        } else {
+            // Page is now hidden
+            lastPageHidden = Date.now();
+        }
+    });
+
+    window.addEventListener('popstate', function(event) {
+        if (document.referrer.includes('/stream/')) {
+            location.reload();
+        }
+    });
+</script>
 </html>
