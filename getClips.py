@@ -3,6 +3,13 @@ import os
 import json
 from pathlib import Path
 
+
+
+def load_secrets():
+    with open('secret_key', 'r') as file:
+        return json.load(file)
+
+
 def load_map_file(map_file_path):
     if os.path.exists(map_file_path):
         with open(map_file_path, "r") as map_file:
@@ -11,8 +18,8 @@ def load_map_file(map_file_path):
 
 def get_activity_history():
     url = 'https://xbl.io/api/v2/activity/history'
-    with open('secret_key', 'r') as file:
-        api_key = file.read().strip()
+    secrets = load_secrets()
+    api_key = secrets['xbox_api_key']
 
     headers = {
         'accept': '*/*',

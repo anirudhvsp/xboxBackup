@@ -8,12 +8,25 @@ from werkzeug.utils import safe_join
 from flask import jsonify
 import itertools
 import random
+from supabase import create_client
+import json
+import uuid
 
+
+with open('secret_key', 'r') as file:
+    secrets = json.load(file)
+
+
+supabase_url = secrets['supabase_url']
+supabase_key = secrets['supabase_key']
+supabase = create_client(supabase_url, supabase_key)
 app = Flask(__name__)
 
 STREAMING_DIR = "/mnt/ebs/streaming_files"
 THUMBNAIL_DIR = "/mnt/ebs/thumbnails"
 DOWNLOADED_MEDIA_DIR = "/mnt/ebs/downloaded_media"
+
+
 
 def get_creation_date(file_path):
     return datetime.fromtimestamp(os.path.getctime(file_path))
@@ -322,6 +335,31 @@ def next_tiktok_video(current_video):
 def previous_tiktok_video(current_video):
     previous_video = get_previous_video(current_video)
     return jsonify({'previous_video': previous_video})
+
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    data = request.json
+    push_token = data.get('push_token')
+
+    if not push_token:
+        return jsonify({'error': 'Missing push_token'}), 400
+
+    try:
+        # Generate a UUID for the user
+        user_id = str(uuid.uuid4())
+
+        result = supabase.table('subscribers').insert({
+            'user_id': user_id,
+            'push_token': push_token
+        }).execute()
+
+        if result.data:
+            return jsonify({'message': 'Subscription successful', 'user_id': user_id}), 201
+        else:
+            return jsonify({'error': 'Subscription failed'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)

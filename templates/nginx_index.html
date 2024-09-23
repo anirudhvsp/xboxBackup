@@ -1,85 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-   <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/static/manifest.json" />
     <meta name="theme-color" content="#121212" />
     <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
     <title>My Xbox Media Streaming App</title>
     <script>
-      // Ensure head element is available
-      window.addEventListener("load", () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker
-                    .register("/static/service-worker.js")
-                    .then((registration) => {
-                        console.log("ServiceWorker registered: ", registration.scope);
-
-                        // Request permission for notifications
-                        return Notification.requestPermission();
-                    })
-                    .then((permission) => {
-                        if (permission === 'granted') {
-                            console.log('Notification permission granted.');
-                        } else {
-                            console.log('Unable to get permission to notify.');
-                        }
-                    })
-                    .catch((error) => {
-                        console.log("ServiceWorker registration failed: ", error);
-                    });
-            }
+        const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+        
+        window.addEventListener("load", () => {
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+              .register("/static/service-worker.js")
+              .then((registration) => {
+                console.log("ServiceWorker registered: ", registration.scope);
+                return Notification.requestPermission();
+              })
+              .then((permission) => {
+                if (permission === "granted") {
+                  console.log("Notification permission granted.");
+                  return navigator.serviceWorker.ready;
+                } else {
+                  throw new Error("Permission not granted for Notification");
+                }
+              })
+              .then((registration) => {
+                return registration.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+              })
+              .then((subscription) => {
+                return fetch('/subscribe', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    push_token: btoa(JSON.stringify(subscription))
+                  })
+                });
+              })
+              .then(response => response.json())
+              .then(data => {
+                console.log('Subscription successful:', data);
+              })
+              .catch((error) => {
+                console.error("Error during service worker registration or subscription: ", error);
+              });
+          }
         });
-
-   </script>
+      
+        // Utility function to convert VAPID key from base64 URL string to Uint8Array
+        function urlB64ToUint8Array(base64String) {
+          const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+          const base64 = (base64String + padding)
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+          const rawData = window.atob(base64);
+          return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+        }
+      </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #107C10;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .container {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 2rem;
-            border-radius: 10px;
-            max-width: 600px;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-        }
-        .btn {
-            display: inline-block;
-            background-color: #0078D7;
-            color: #ffffff;
-            text-decoration: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            font-size: 1.2rem;
-            transition: background-color 0.3s ease;
-        }
-        .btn:hover {
-            background-color: #005A9E;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #107c10;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .container {
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 2rem;
+        border-radius: 10px;
+        max-width: 600px;
+      }
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+      p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+      .btn {
+        display: inline-block;
+        background-color: #0078d7;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 5px;
+        font-size: 1.2rem;
+        transition: background-color 0.3s ease;
+      }
+      .btn:hover {
+        background-color: #005a9e;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Welcome to My Xbox Media Streaming App</h1>
-        <p>Stream my xbox clips directly from my personal computer. visit <a href="https://github.com/anirudhvsp/xboxBackup">github</a> for more info </p>
-        <a href="/home" class="btn">Enter App</a>
+      <h1>Welcome to My Xbox Media Streaming App</h1>
+      <p>
+        Stream my xbox clips directly from my personal computer. visit
+        <a href="https://github.com/anirudhvsp/xboxBackup">github</a> for more
+        info
+      </p>
+      <a href="/home" class="btn">Enter App</a>
     </div>
-</body>
+  </body>
 </html>
