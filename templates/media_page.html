@@ -40,7 +40,7 @@ async function checkCachedVideos() {
         if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
             const cachedIcon = tile.querySelector('.cached-icon');
             cachedIcon.style.display = 'block'; // Show the cached icon
-            cachedIcon.style.backgroundImage = 'url("/path/to/cached-icon.svg")'; // Update icon path
+            cachedIcon.style.backgroundImage = 'url("/static/icon-192x192.png")'; // Update icon path
             cachedIcon.style.width = '24px'; // Set icon width
             cachedIcon.style.height = '24px'; // Set icon height
             cachedIcon.style.position = 'absolute';
