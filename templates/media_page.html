@@ -1,8 +1,12 @@
 {% if media %}
 <div class="media-grid-page">
     {% for item in media %}
-    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}" data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }">
-        <div class="cached-icon" style="display: none;"></div> <!-- Cached icon -->
+    <div class="media-tile ghost-loading" 
+         data-name="{{ item.name }}" 
+         data-thumbnail="{{ item.thumbnail }}" 
+         data-type="{{ item.type }}" 
+         data-duration="{{ item.duration if item.type == 'stream' else '' }}">
+        <div class="cached-icon" style="display: none;"></div>
         <div class="image-container">
             <div class="ghost-image"></div>
         </div>
