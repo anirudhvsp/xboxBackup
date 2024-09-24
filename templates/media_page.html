@@ -70,17 +70,18 @@ function loadActualContent() {
                 <p class="title-text">${name}</p>
             </div>
             ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
-            <div class="cached-icon" style="display: none;"></div> <!-- Moved inside the tile -->
+            <div class="cached-icon" style="display: none;"></div>
         `;
         
+        // Restore the click event to the entire tile
         tile.classList.remove('ghost-loading');
         tile.classList.add('loading');
 
-        if (type === 'image') {
-            tile.addEventListener('click', () => {
-                window.open(`/downloaded_media/${name}`, '_blank');
-            });
-        }
+        tile.addEventListener('click', () => {
+            if (type === 'stream') {
+                window.open(`/stream/${name}`, '_blank'); // Adjust the URL structure if needed
+            }
+        });
     });
     lazyLoadImages();
 }
