@@ -28,8 +28,7 @@ workbox.precaching.precacheAndRoute([
 // Runtime caching
 registerRoute(
   ({ request }) => {
-    console.log(request);
-    return request.destination === "jpeg";
+    return request.destination === "image";
   },
   new CacheFirst({
     cacheName: "images",
@@ -50,35 +49,24 @@ registerRoute(
   })
 );
 
-registerRoute(
-  ({ url }) => url.pathname.startsWith("/static/"),
-  async (options) => {
-    console.log(`Request made for: ${options.request.url}`);
-    return new NetworkFirst({
-      cacheName: "static-cache", // Fixed typo in 'staic-cache'
-      plugins: [
-        new CacheableResponsePlugin({
-          statuses: [0, 200],
-        }),
-      ],
-    }).handle(options);
-  }
-);
 
 // Push notifications
 self.addEventListener("push", (event) => {
-  const options = {
-    body: event.data ? event.data.text() : "Default notification body",
-    data: {
-      url: "https://streamitnow.site/stream/20240921_020",
-    },
-  };
+  if (event.data) {
+    const data = JSON.parse(event.data.text());
+    const options = {
+      body: data.body,
+      icon: "/static/icon-192x192.png",
+      data: {
+        url: "https://streamitnow.site/stream/20240921_020",
+      },
+    };
 
-  event.waitUntil(
-    self.registration.showNotification("Notification Title", options)
-  );
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
 });
-
 // Notification click event
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
@@ -104,21 +92,8 @@ self.addEventListener("notificationclick", (event) => {
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith("/static/") &&
-    (url.pathname.endsWith(".m3u8") || url.pathname.endsWith(".ts")),
+    (url.pathname.endsWith(".m3u8")),
   new CacheFirst({
     cacheName: "video-cache",
-    plugins: [
-      new CacheableResponsePlugin({
-        statuses: [0, 200],
-      }),
-      new ExpirationPlugin({
-        maxEntries: 50, // Adjust as needed
-        maxAgeSeconds: 60 * 60 * 24, // 1 Day
-      }),
-    ],
   })
 );
-
-self.addEventListener("fetch", (e) => {
-  console.log(`[Service Worker] Fetched resource ${e.request.url}`);
-});
