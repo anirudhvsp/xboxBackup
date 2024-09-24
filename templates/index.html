@@ -14,7 +14,7 @@
       // Ensure head element is available
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/static/service-worker2.js")
+          .register("/static/service-worker3.js")
           .then((registration) =>
             console.log("ServiceWorker registered: ", registration.scope)
           )
@@ -227,7 +227,7 @@
       }
     });
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/service-worker2.js')
+        navigator.serviceWorker.register('/static/service-worker3.js')
         .then((registration) => {
             console.log('ServiceWorker registered: ', registration.scope);
             registration.update();

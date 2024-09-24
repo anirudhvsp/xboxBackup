@@ -50,6 +50,7 @@ registerRoute(
 );
 
 
+
 // Push notifications
 self.addEventListener("push", (event) => {
   if (event.data) {
@@ -58,7 +59,7 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: "/static/icon-192x192.png",
       data: {
-        url: "https://streamitnow.site/stream/20240921_020",
+        url: data.url, // Use the URL from the push notification data
       },
     };
 
@@ -67,6 +68,7 @@ self.addEventListener("push", (event) => {
     );
   }
 });
+
 // Notification click event
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
