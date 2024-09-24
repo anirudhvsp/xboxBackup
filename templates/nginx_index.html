@@ -14,7 +14,7 @@
         console.log("Window loaded. Starting service worker registration...");
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker
-            .register("/static/service-worker.js")
+            .register("/static/service-worker.js", { scope: "/" })
             .then((registration) => {
               console.log("ServiceWorker registered successfully with scope:", registration.scope);
               console.log("Requesting Notification permission...");
