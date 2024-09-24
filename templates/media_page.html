@@ -66,6 +66,7 @@ function loadActualContent() {
                 <p class="title-text">${name}</p>
             </div>
             ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
+            <div class="cached-icon" style="display: none;"></div>
         `;
         
         tile.classList.remove('ghost-loading');
