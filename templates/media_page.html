@@ -28,13 +28,16 @@
 async function checkCachedVideos() {
     const cacheStorage = await caches.open("video-metadata");
     const cachedResponse = await cacheStorage.keys();
-    console.log(cachedResponse);
+    
+    // Extracting video IDs from cached responses
+    const cachedVideoIds = cachedResponse.map(request => request.url.split('/').pop()); // Adjust based on your URL structure
     const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
-    const cachedVideoNames = cachedVideos.map(video => video.name); // Adjust if necessary based on your data structure
+    const cachedVideoNames = cachedVideos.map(video => video.name);
+    
     const tiles = document.querySelectorAll('.media-tile');
     tiles.forEach(tile => {
         const name = tile.dataset.name;
-        if (cachedVideoNames.includes(name)) {
+        if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
             const cachedIcon = tile.querySelector('.cached-icon');
             cachedIcon.style.display = 'block'; // Show the cached icon
             cachedIcon.style.backgroundImage = 'url("/path/to/cached-icon.svg")'; // Update icon path
@@ -50,6 +53,7 @@ async function checkCachedVideos() {
         }
     });
 }
+
 function loadActualContent() {
     const tiles = document.querySelectorAll('.media-tile.ghost-loading');
     tiles.forEach(tile => {
@@ -57,7 +61,7 @@ function loadActualContent() {
         const thumbnail = tile.dataset.thumbnail;
         const type = tile.dataset.type;
         const duration = tile.dataset.duration;
-    
+
         tile.innerHTML = `
             <div class="image-container">
                 <img preload class="lazy-load" data-src="${thumbnail}" alt="${name}">
@@ -66,7 +70,9 @@ function loadActualContent() {
                 <p class="title-text">${name}</p>
             </div>
             ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
+            <div class="cached-icon" style="display: none;"></div> <!-- Moved inside the tile -->
         `;
+        
         tile.classList.remove('ghost-loading');
         tile.classList.add('loading');
 
@@ -106,7 +112,6 @@ document.addEventListener('htmx:afterSwap', () => {
     loadActualContent();
     checkCachedVideos();
 });
-
 </script>
 <style>
     .media-tile[data-type="image"] {
