@@ -44,17 +44,8 @@ async function checkCachedVideos() {
         const name = tile.dataset.name;
         if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
             const cachedIcon = tile.querySelector('.cached-icon');
-            cachedIcon.style.display = 'block'; // Show the cached icon
-            cachedIcon.style.backgroundImage = 'url("/static/icon-check-small.png")'; // Update icon path
-            cachedIcon.style.width = '24px'; // Set icon width
-            cachedIcon.style.height = '24px'; // Set icon height
-            cachedIcon.style.position = 'absolute';
-            cachedIcon.style.top = '5px';
-            cachedIcon.style.left = '5px';
-            cachedIcon.style.backgroundSize = 'contain';
-            cachedIcon.style.backgroundRepeat = 'no-repeat';
-            cachedIcon.style.backgroundPosition = 'center';
-            cachedIcon.style.zIndex = '10'; // Ensure it appears above other elements
+            cachedIcon.style.display = 'block';
+            cachedIcon.style.backgroundImage = 'url("/static/icon-check-small.png")';
         }
     });
 }
@@ -232,5 +223,18 @@ document.addEventListener('htmx:afterSwap', () => {
         margin: 10px auto; /* Center align */
         background-color: var(--tile-bg);
         border-radius: 4px; /* Rounded corners for ghost text */
+    }
+
+    .cached-icon {
+        display: none; /* Initially hidden */
+        width: 24px;
+        height: 24px;
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        z-index: 10; /* Above other elements */
     }
 </style>
