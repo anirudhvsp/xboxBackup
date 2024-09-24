@@ -5,8 +5,12 @@
          data-name="{{ item.name }}" 
          data-thumbnail="{{ item.thumbnail }}" 
          data-type="{{ item.type }}" 
-         data-duration="{{ item.duration if item.type == 'stream' else '' }}">
-        <div class="cached-icon" style="display: none;"></div>
+         data-duration="{{ item.duration if item.type == 'stream' else '' }}"
+         {% if item.type == 'stream' %} 
+         hx-get="/stream/{{ item.name }}" 
+         hx-target="body" 
+         hx-push-url="true" 
+         {% endif %}>
         <div class="image-container">
             <div class="ghost-image"></div>
         </div>
@@ -16,6 +20,7 @@
         {% if item.type == 'stream' %}
         <div class="duration-indicator">{{ item.duration }}</div>
         {% endif %}
+        <div class="cached-icon" style="display: none;"></div>
     </div>
     {% endfor %}
 </div>
@@ -70,22 +75,14 @@ function loadActualContent() {
                 <p class="title-text">${name}</p>
             </div>
             ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
-            <div class="cached-icon" style="display: none;"></div>
         `;
         
-        // Restore the click event to the entire tile
         tile.classList.remove('ghost-loading');
         tile.classList.add('loading');
-
-        tile.addEventListener('click', () => {
-            if (type === 'stream') {
-                window.open(`/stream/${name}`, '_blank'); // Adjust the URL structure if needed
-            }
-        });
     });
     lazyLoadImages();
 }
-
+    
 function lazyLoadImages() {
     const images = document.querySelectorAll('.media-tile.loading img.lazy-load');
     images.forEach(img => {
