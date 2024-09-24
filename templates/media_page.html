@@ -26,9 +26,11 @@
     
 <script>
 function checkCachedVideos() {
+    const cacheStorage = await caches.open(video-metadata);
+    const cachedResponse = await cacheStorage.keys();
+    console.log(cachedResponse);
     const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
     const cachedVideoNames = cachedVideos.map(video => video.name); // Adjust if necessary based on your data structure
-
     const tiles = document.querySelectorAll('.media-tile');
     tiles.forEach(tile => {
         const name = tile.dataset.name;
