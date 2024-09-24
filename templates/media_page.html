@@ -26,7 +26,7 @@
     
 <script>
 async function checkCachedVideos() {
-    const cacheStorage = await caches.open(video-metadata);
+    const cacheStorage = await caches.open("video-metadata");
     const cachedResponse = await cacheStorage.keys();
     console.log(cachedResponse);
     const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
