@@ -1,7 +1,8 @@
 {% if media %}
 <div class="media-grid-page">
     {% for item in media %}
-    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}" data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }}" {% if item.type == 'stream' %}hx-get="/stream/{{ item.name }}" hx-target="body" hx-push-url="true"{% endif %}>
+    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}" data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }">
+        <div class="cached-icon" style="display: none;"></div> <!-- Cached icon -->
         <div class="image-container">
             <div class="ghost-image"></div>
         </div>
@@ -18,8 +19,31 @@
 <div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once" hx-swap="outerHTML"></div>
 {% endif %}
 {% endif %}
-
+    
 <script>
+function checkCachedVideos() {
+    const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
+    const cachedVideoNames = cachedVideos.map(video => video.name); // Adjust if necessary based on your data structure
+
+    const tiles = document.querySelectorAll('.media-tile');
+    tiles.forEach(tile => {
+        const name = tile.dataset.name;
+        if (cachedVideoNames.includes(name)) {
+            const cachedIcon = tile.querySelector('.cached-icon');
+            cachedIcon.style.display = 'block'; // Show the cached icon
+            cachedIcon.style.backgroundImage = 'url("/path/to/cached-icon.svg")'; // Update icon path
+            cachedIcon.style.width = '24px'; // Set icon width
+            cachedIcon.style.height = '24px'; // Set icon height
+            cachedIcon.style.position = 'absolute';
+            cachedIcon.style.top = '5px';
+            cachedIcon.style.left = '5px';
+            cachedIcon.style.backgroundSize = 'contain';
+            cachedIcon.style.backgroundRepeat = 'no-repeat';
+            cachedIcon.style.backgroundPosition = 'center';
+            cachedIcon.style.zIndex = '10'; // Ensure it appears above other elements
+        }
+    });
+}
 function loadActualContent() {
     const tiles = document.querySelectorAll('.media-tile.ghost-loading');
     tiles.forEach(tile => {
@@ -64,9 +88,19 @@ function lazyLoadImages() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', loadActualContent);
-document.addEventListener('htmx:load', loadActualContent);
-document.addEventListener('htmx:afterSwap', loadActualContent);
+document.addEventListener('DOMContentLoaded', () => {
+    loadActualContent();
+    checkCachedVideos();
+});
+document.addEventListener('htmx:load', () => {
+    loadActualContent();
+    checkCachedVideos();
+});
+document.addEventListener('htmx:afterSwap', () => {
+    loadActualContent();
+    checkCachedVideos();
+});
+
 </script>
 <style>
     .media-tile[data-type="image"] {
