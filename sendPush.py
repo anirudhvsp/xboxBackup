@@ -11,6 +11,7 @@ with open('secret_key', 'r') as file:
 supabase_url = secrets['supabase_url']
 supabase_key = secrets['supabase_key']
 supabase = create_client(supabase_url, supabase_key)
+print(secrets)
 vapid_private_key = secrets['vapid_private_key']
 
 def send_notifications():
@@ -19,8 +20,9 @@ def send_notifications():
     print(f"Fetched {len(subscribers)} subscribers")
 
     payload = json.dumps({
-        "title": "Yoyo wasssup",
-        "body": "I can send notifications now! I am god"
+        "title": "Testing push notifications",
+        "body": "checkout this amazing cycling video",
+        "url" : "https://streamitnow.site/stream/20240923_006"
     })
 
     for index, subscriber in enumerate(subscribers):
