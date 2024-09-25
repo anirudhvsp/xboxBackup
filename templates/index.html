@@ -11,16 +11,73 @@
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
     <script>
+      function subscribeToPushNotifications() {
+        const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((registration) => {
+              console.log("Service worker is ready. Requesting Notification permission...");
+              return Notification.requestPermission()
+                .then((permission) => {
+                  if (permission !== "granted") {
+                    throw new Error("Permission not granted for Notification");
+                  }
+                  return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                  });
+                });
+            })
+            .then((subscription) => {
+              console.log("Push subscription object:", subscription);
+              const subscriptionJson = JSON.stringify(subscription);
+              console.log("Encoded push subscription (btoa):", btoa(subscriptionJson));
+      
+              // Sending subscription to the server
+              return fetch('/subscribe', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  push_token: btoa(subscriptionJson)
+                })
+              });
+            })
+            .then(response => {
+              console.log('Response from /subscribe endpoint:', response);
+              return response.json();
+            })
+            .then(data => {
+              console.log('Subscription successful:', data);
+            })
+            .catch((error) => {
+              console.error("Error during subscription:", error);
+            });
+        } else {
+          console.warn("Service Worker not supported in this browser.");
+        }
+      }
+      
+      // Utility function to convert VAPID key from base64 URL string to Uint8Array
+      function urlB64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+      }
+
+      
       // Ensure head element is available
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/static/service-worker3.js")
-          .then((registration) =>
-            console.log("ServiceWorker registered: ", registration.scope)
-          )
-          .catch((error) =>
-            console.log("ServiceWorker registration failed: ", error)
-          );
+     window.addEventListener("load", () => {
+        navigator.serviceWorker.register('/static/service-worker3.js')
+          .then((registration) => {
+            console.log('ServiceWorker registered: ', registration.scope);
+            subscribeToPushNotifications(); // Call the subscription function here
+          })
+          .catch((error) => console.log('ServiceWorker registration failed: ', error));
       });
       if (!document.head) {
         document.head = document.createElement("head");
