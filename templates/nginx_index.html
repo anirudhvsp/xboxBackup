@@ -8,32 +8,33 @@
     <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
     <title>My Xbox Media Streaming App</title>
     <script>
-      const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+      // Utility function to convert VAPID key from base64 URL string to Uint8Array
+      function urlB64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+      }
 
-      window.addEventListener("load", () => {
-        console.log("Window loaded. Starting service worker registration...");
+      function subscribeToPushNotifications() {
+        const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+
         if ("serviceWorker" in navigator) {
-          navigator.serviceWorker
-            .register("/static/service-worker3.js", { scope: "/" })
+          navigator.serviceWorker.ready
             .then((registration) => {
-              console.log("ServiceWorker registered successfully with scope:", registration.scope);
-              console.log("Requesting Notification permission...");
-              return Notification.requestPermission();
-            })
-            .then((permission) => {
-              if (permission === "granted") {
-                console.log("Notification permission granted.");
-                return navigator.serviceWorker.ready;
-              } else {
-                throw new Error("Permission not granted for Notification");
-              }
-            })
-            .then((registration) => {
-              console.log("Service worker is ready. Subscribing to push notifications...");
-              return registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
-              });
+              console.log("Service worker is ready. Requesting Notification permission...");
+              return Notification.requestPermission()
+                .then((permission) => {
+                  if (permission !== "granted") {
+                    throw new Error("Permission not granted for Notification");
+                  }
+                  return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                  });
+                });
             })
             .then((subscription) => {
               console.log("Push subscription object:", subscription);
@@ -59,24 +60,25 @@
               console.log('Subscription successful:', data);
             })
             .catch((error) => {
-              console.error("Error during service worker registration or subscription:", error);
+              console.error("Error during subscription:", error);
             });
         } else {
           console.warn("Service Worker not supported in this browser.");
         }
-      });
-
-      // Utility function to convert VAPID key from base64 URL string to Uint8Array
-      function urlB64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding)
-          .replace(/-/g, "+")
-          .replace(/_/g, "/");
-        const rawData = window.atob(base64);
-        const output = Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
-        console.log("Converted VAPID key to Uint8Array:", output);
-        return output;
       }
+
+      window.addEventListener("load", () => {
+        console.log("Window loaded. Starting service worker registration...");
+        navigator.serviceWorker
+          .register("/static/service-worker3.js", { scope: "/" })
+          .then((registration) => {
+            console.log("ServiceWorker registered successfully with scope:", registration.scope);
+            subscribeToPushNotifications(); // Call the subscription function here
+          })
+          .catch((error) => {
+            console.error("ServiceWorker registration failed:", error);
+          });
+      });
     </script>
     <style>
       body {
@@ -124,9 +126,9 @@
     <div class="container">
       <h1>Welcome to My Xbox Media Streaming App</h1>
       <p>
-        Stream my xbox clips directly from my personal computer. Visit
-        <a href="https://github.com/anirudhvsp/xboxBackup">github</a> for more
-        info
+        Stream my Xbox clips directly from my personal computer. Visit
+        <a href="https://github.com/anirudhvsp/xboxBackup">GitHub</a> for more
+        info.
       </p>
       <a href="/home" class="btn">Enter App</a>
     </div>
