@@ -390,79 +390,81 @@
 
       updateOfflineStatus("{{ video_name }}");
       function downloadVideoForOffline(videoUrl, progressBar, progressText) {
-        const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
-        const videoName = "{{ video_name }}";
-        let totalSegments = 0;
-        let downloadedSegments = 0;
-
-        caches.open("video-metadata").then((metadataCache) => {
-          metadataCache.match(videoName).then((cached) => {
-            if (cached) {
-              alert("Video is already cached for offline viewing.");
-              return;
-            }
-
-            fetch(videoUrl)
-              .then((response) => response.text())
-              .then((master) => {
-                const parser = new m3u8Parser.Parser();
-                parser.push(master);
-                parser.end();
-                const masterPlaylist = parser.manifest;
-
-                // Calculate total segments across all playlists
-                masterPlaylist.playlists.forEach((playlist, index) => {
-                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
-                  fetch(playlistUrl)
-                    .then((response) => response.text())
-                    .then((playlistContent) => {
-                      const playlistParser = new m3u8Parser.Parser();
-                      playlistParser.push(playlistContent);
-                      playlistParser.end();
-                      totalSegments += playlistParser.manifest.segments.length;
-                    });
-                });
-
-                // Download all playlists
-                Promise.all(
-                  masterPlaylist.playlists.map((playlist, index) => {
-                    const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
-                    return fetch(playlistUrl)
+          const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
+          const videoName = "{{ video_name }}";
+          let totalSegments = 0;
+          let downloadedSegments = 0;
+      
+          caches.open("video-metadata").then((metadataCache) => {
+              metadataCache.match(videoName).then((cached) => {
+                  if (cached) {
+                      alert("Video is already cached for offline viewing.");
+                      return;
+                  }
+      
+                  fetch(videoUrl)
                       .then((response) => response.text())
-                      .then((playlistContent) => {
-                        const playlistParser = new m3u8Parser.Parser();
-                        playlistParser.push(playlistContent);
-                        playlistParser.end();
-                        const segments = playlistParser.manifest.segments;
-
-                        return Promise.all(
-                          segments.map((segment) => {
-                            const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
-                            return fetch(segmentUrl)
-                              .then((response) => response.blob())
-                              .then((blob) => {
-                                return caches.open("video-cache").then((cache) => {
-                                  return cache.put(segmentUrl, new Response(blob));
-                                });
-                              })
-                              .then(() => {
-                                downloadedSegments++;
-                                updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
+                      .then((master) => {
+                          const parser = new m3u8Parser.Parser();
+                          parser.push(master);
+                          parser.end();
+                          const masterPlaylist = parser.manifest;
+      
+                          // Cache the master playlist
+                          return caches.open("video-cache").then((cache) => {
+                              return cache.put(videoUrl, new Response(master));
+                          }).then(() => {
+                              // Calculate total segments across all playlists
+                              return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
+                                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
+      
+                                  return fetch(playlistUrl)
+                                      .then((response) => response.text())
+                                      .then((playlistContent) => {
+                                          const playlistParser = new m3u8Parser.Parser();
+                                          playlistParser.push(playlistContent);
+                                          playlistParser.end();
+                                          totalSegments += playlistParser.manifest.segments.length;
+      
+                                          // Cache the individual playlist
+                                          return caches.open("video-cache").then((cache) => {
+                                              return cache.put(playlistUrl, new Response(playlistContent));
+                                          }).then(() => {
+                                              return playlistParser.manifest.segments;
+                                          });
+                                      });
+                              }));
+                          }).then((allSegments) => {
+                              // Download all playlists
+                              return Promise.all(allSegments.map((segments, index) => {
+                                  return Promise.all(
+                                      segments.map((segment) => {
+                                          const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
+                                          return fetch(segmentUrl)
+                                              .then((response) => response.blob())
+                                              .then((blob) => {
+                                                  return caches.open("video-cache").then((cache) => {
+                                                      return cache.put(segmentUrl, new Response(blob));
+                                                  });
+                                              })
+                                              .then(() => {
+                                                  downloadedSegments++;
+                                                  updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
+                                              });
+                                      })
+                                  );
+                              }));
+                          }).then(() => {
+                              metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
+                                  alert("Video successfully cached for offline viewing.");
+                                  updateOfflineStatus(videoName);
                               });
-                          })
-                        );
+                          });
                       });
-                  })
-                ).then(() => {
-                  metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
-                    alert("Video successfully cached for offline viewing.");
-                    updateOfflineStatus(videoName);
-                  });
-                });
               });
           });
-        });
       }
+
       function updateProgress(
         downloadedSegments,
         totalSegments,
