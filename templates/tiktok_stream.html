@@ -75,10 +75,49 @@
             background-color: rgba(0, 0, 0, 0.7);
         }
 
+        .download-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .download-button:hover {
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .progress-ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .progress-ring__circle {
+        transition: 0.35s stroke-dashoffset;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+
     </style>
 </head>
 <body>
     <button class="back-button" onclick="window.location.href='/home'">&larr;</button>
+    <button id="downloadButton" class="download-button">
+        <svg class="progress-ring" width="50" height="50">
+            <circle class="progress-ring__circle" stroke="white" stroke-width="2" fill="transparent" r="23" cx="25" cy="25"/>
+        </svg>
+        <span>⬇️</span>
+    </button>
     <div class="video-wrapper" id="videoWrapper">
         <div class="ghost-loading" id="previousGhostLoading"></div>
 
@@ -99,7 +138,7 @@
         let currentPlyr;
         let loadedVideos = [currentVideoName];
         let currentVideoIndex = 1; // Index of the current video in the loadedVideos array
-        
+        let currentDownloadingVideo = null;
         window.onload = async () => {
             await initializeVideos();
             document.getElementById('video-'+currentVideoName).scrollIntoView();
@@ -316,7 +355,107 @@
                     }
                 });
         }
-                
+        
+
+        function setProgress(percent) {
+        const circle = document.querySelector('.progress-ring__circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
+    }
+
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        if (currentDownloadingVideo) {
+            alert('A download is already in progress.');
+            return;
+        }
+
+        const currentVideo = document.querySelector('video:not([muted])');
+        if (!currentVideo) {
+            alert('No video is currently playing.');
+            return;
+        }
+
+        const videoId = currentVideo.id.replace('player-', '');
+        const videoUrl = `/static/${videoId}/master.m3u8`;
+        currentDownloadingVideo = videoId;
+
+        downloadVideoForOffline(videoUrl, videoId);
+    });
+
+    function downloadVideoForOffline(videoUrl, videoId) {
+        const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
+        let totalSegments = 0;
+        let downloadedSegments = 0;
+
+        caches.open("video-metadata").then((metadataCache) => {
+            metadataCache.match(videoId).then((cached) => {
+                if (cached) {
+                    alert("Video is already cached for offline viewing.");
+                    currentDownloadingVideo = null;
+                    return;
+                }
+
+                fetch(videoUrl)
+                    .then((response) => response.text())
+                    .then((master) => {
+                        const parser = new m3u8Parser.Parser();
+                        parser.push(master);
+                        parser.end();
+                        const masterPlaylist = parser.manifest;
+
+                        return caches.open("video-cache").then((cache) => {
+                            return cache.put(videoUrl, new Response(master));
+                        }).then(() => {
+                            return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
+                                const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
+
+                                return fetch(playlistUrl)
+                                    .then((response) => response.text())
+                                    .then((playlistContent) => {
+                                        const playlistParser = new m3u8Parser.Parser();
+                                        playlistParser.push(playlistContent);
+                                        playlistParser.end();
+                                        totalSegments += playlistParser.manifest.segments.length;
+
+                                        return caches.open("video-cache").then((cache) => {
+                                            return cache.put(playlistUrl, new Response(playlistContent));
+                                        }).then(() => {
+                                            return playlistParser.manifest.segments;
+                                        });
+                                    });
+                            }));
+                        }).then((allSegments) => {
+                            return Promise.all(allSegments.map((segments, index) => {
+                                return Promise.all(
+                                    segments.map((segment) => {
+                                        const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
+                                        return fetch(segmentUrl)
+                                            .then((response) => response.blob())
+                                            .then((blob) => {
+                                                return caches.open("video-cache").then((cache) => {
+                                                    return cache.put(segmentUrl, new Response(blob));
+                                                });
+                                            })
+                                            .then(() => {
+                                                downloadedSegments++;
+                                                setProgress((downloadedSegments / totalSegments) * 100);
+                                            });
+                                    })
+                                );
+                            }));
+                        }).then(() => {
+                            metadataCache.put(videoId, new Response(JSON.stringify({ cached: true }))).then(() => {
+                                alert("Video successfully cached for offline viewing.");
+                                currentDownloadingVideo = null;
+                                setProgress(0);
+                            });
+                        });
+                    });
+            });
+        });
+    }
     </script>
 </body>
 </html>
