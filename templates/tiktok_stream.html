@@ -371,19 +371,16 @@
             return;
         }
 
-        const currentVideo = document.querySelector('video:not([muted])');
-        if (!currentVideo) {
+        if (!currentVideoName) {
             alert('No video is currently playing.');
             return;
         }
 
-        const videoId = currentVideo.id.replace('player-', '');
-        const videoUrl = `/static/${videoId}/master.m3u8`;
-        currentDownloadingVideo = videoId;
+        const videoUrl = `/static/${currentVideoName}/master.m3u8`;
+        currentDownloadingVideo = currentVideoName;
 
-        downloadVideoForOffline(videoUrl, videoId);
+        downloadVideoForOffline(videoUrl, currentVideoName);
     });
-
     function downloadVideoForOffline(videoUrl, videoId) {
         const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
         let totalSegments = 0;
