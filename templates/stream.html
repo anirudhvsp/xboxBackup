@@ -413,7 +413,6 @@
       const videoName = "{{ video_name }}";
       let totalSegments = 0;
       let downloadedSegments = 0;
-
       caches.open("video-metadata").then((metadataCache) => {
         metadataCache.match(videoName).then((cached) => {
           if (cached) {
