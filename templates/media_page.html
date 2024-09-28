@@ -125,6 +125,12 @@ document.addEventListener('htmx:afterSwap', () => {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
+@media screen and (min-width: 1280px) and (max-width: 1439px) {
+    .media-grid,
+    .media-grid-page {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
 
 @media screen and (min-width: 1440px) {
     .media-grid-page {
