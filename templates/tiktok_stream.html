@@ -125,6 +125,27 @@
 .toast.show {
     opacity: 1;
 }
+.share-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.share-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
 
 
     </style>
@@ -137,6 +158,7 @@
         </svg>
         <span>⬇️</span>
     </button>
+    <button class="share-button" onclick="shareUrl()">&#128279;</button>
     <div class="video-wrapper" id="videoWrapper">
         <div class="ghost-loading" id="previousGhostLoading"></div>
 
@@ -489,6 +511,17 @@
             document.body.removeChild(toast);
         }, 300);
     }, duration);
+}
+
+
+function shareUrl() {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl).then(() => {
+        showToast('URL copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy URL: ', err);
+        showToast('Failed to copy URL');
+    });
 }
 
     </script>
