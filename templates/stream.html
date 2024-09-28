@@ -256,13 +256,14 @@
       initializeVideoPlayer();
     });
 
+    
     function initializeVideoPlayer() {
       const source = "/static/{{ video_name }}/master.m3u8";
       const video = document.querySelector("#player");
       const loader = document.getElementById("loader");
       const videoContainer = document.getElementById("videoContainer");
 
-      
+
       const defaultOptions = {
         controls: [
           "play",
