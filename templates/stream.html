@@ -1,520 +1,521 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Player</title>
-    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
-    <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
-    <style>
-      :root {
-        --bg-color: #121212;
-        --text-color: #ffffff;
-        --button-bg: #333333;
-        --button-text: #ffffff;
-        --button-hover-bg: #444444;
-        --button-hover-text: #ffffff;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Player</title>
+  <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
+  <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --button-bg: #333333;
+      --button-text: #ffffff;
+      --button-hover-bg: #444444;
+      --button-hover-text: #ffffff;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding-top: 33vh;
+      padding-bottom: 50px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .video-container {
+      width: 100%;
+      height: calc(33vh - 50px);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    .video-wrapper {
+      width: 100%;
+      height: 100%;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1001;
+    }
+
+    #downloadVid {
+      width: 100%;
+      height: 50px;
+      margin: 0;
+      border-radius: 0;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #downloadVid:hover {
+      background-color: var(--button-hover-bg);
+      color: var(--button-hover-text);
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      border: 5px solid var(--button-bg);
+      border-top: 5px solid var(--button-text);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .navigation {
+      position: fixed;
+      bottom: 50px;
+      left: 0;
+      width: 100%;
+      z-index: 1001;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #backToHome,
+    #tiktokView {
+      width: 48%;
+      height: 50px;
+      margin: 0;
+      border-radius: 0;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #backToHome:hover,
+    #tiktokView:hover {
+      background-color: var(--button-hover-bg);
+      color: var(--button-hover-text);
+    }
+
+    @media (min-width: 768px) {
       body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        margin: 0;
-        padding-top: 33vh;
+        padding-top: 70vh;
         padding-bottom: 50px;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
       }
 
       .video-container {
-        width: 100%;
-        height: calc(33vh - 50px);
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-      }
-
-      .video-wrapper {
-        width: 100%;
-        height: 100%;
-      }
-
-      video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        width: 70%;
+        height: calc(70vh - 50px);
+        left: 15%;
       }
 
       .controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1001;
-      }
-
-      #downloadVid {
-        width: 100%;
-        height: 50px;
-        margin: 0;
-        border-radius: 0;
-        background-color: var(--button-bg);
-        color: var(--button-text);
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-      }
-
-      #downloadVid:hover {
-        background-color: var(--button-hover-bg);
-        color: var(--button-hover-text);
-      }
-
-      #loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: var(--bg-color);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-      }
-
-      .spinner {
-        border: 5px solid var(--button-bg);
-        border-top: 5px solid var(--button-text);
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+        width: 70%;
+        left: 15%;
       }
 
       .navigation {
-        position: fixed;
-        bottom: 50px;
-        left: 0;
-        width: 100%;
-        z-index: 1001;
-        display: flex;
-        justify-content: space-between;
+        width: 70%;
+        left: 15%;
       }
+    }
 
-      #backToHome,
-      #tiktokView {
-        width: 48%;
-        height: 50px;
-        margin: 0;
-        border-radius: 0;
-        background-color: var(--button-bg);
-        color: var(--button-text);
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-      }
+    .download-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
 
-      #backToHome:hover,
-      #tiktokView:hover {
-        background-color: var(--button-hover-bg);
-        color: var(--button-hover-text);
-      }
+    #offlineDownload,
+    #deleteOffline {
+      width: 48%;
+      height: 50px;
+      margin: 0;
+      border-radius: 0;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
 
-      @media (min-width: 768px) {
-        body {
-          padding-top: 70vh;
-          padding-bottom: 50px;
-        }
+    #downloadProgress {
+      width: 48%;
+      display: none;
+    }
 
-        .video-container {
-          width: 70%;
-          height: calc(70vh - 50px);
-          left: 15%;
-        }
+    #progressBar {
+      width: 100%;
+      height: 20px;
+    }
 
-        .controls {
-          width: 70%;
-          left: 15%;
-        }
+    #progressText {
+      display: block;
+      text-align: center;
+      margin-top: 5px;
+    }
 
-        .navigation {
-          width: 70%;
-          left: 15%;
-        }
-      }
-      .download-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-      }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1002;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
 
-      #offlineDownload,
-      #deleteOffline {
-        width: 48%;
-        height: 50px;
-        margin: 0;
-        border-radius: 0;
-        background-color: var(--button-bg);
-        color: var(--button-text);
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-      }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
 
-      #downloadProgress {
-        width: 48%;
-        display: none;
-      }
+<body hx-ext="head-support">
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
 
-      #progressBar {
-        width: 100%;
-        height: 20px;
-      }
-
-      #progressText {
-        display: block;
-        text-align: center;
-        margin-top: 5px;
-      }
-
-      .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1002;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-
-.toast.show {
-    opacity: 1;
-}
-
-    </style>
-  </head>
-  <body hx-ext="head-support">
-    <div id="loader">
-      <div class="spinner"></div>
+  <div id="videoContainer" style="display: none">
+    <div class="video-container">
+      <div class="video-wrapper">
+        <video id="player" playsinline controls></video>
+      </div>
     </div>
-
-    <div id="videoContainer" style="display: none">
-      <div class="video-container">
-        <div class="video-wrapper">
-          <video id="player" playsinline controls></video>
-        </div>
-      </div>
-      <!-- Add this right before the .controls div -->
-      <div class="navigation">
-        <button id="backToHome" onclick="window.location.href='/home'">
-          Back to Home
+    <!-- Add this right before the .controls div -->
+    <div class="navigation">
+      <button id="backToHome" onclick="window.location.href='/home'">
+        Back to Home
+      </button>
+      <button id="tiktokView" onclick="window.location.href='/brainrot/{{ video_name }}'">
+        BrainRot Mode
+      </button>
+    </div>
+    <div class="controls">
+      <div class="download-container">
+        <button id="offlineDownload">Download for Offline Viewing</button>
+        <button id="deleteOffline" style="display: none">
+          Delete Offline Video
         </button>
-        <button
-          id="tiktokView"
-          onclick="window.location.href='/brainrot/{{ video_name }}'"
-        >
-          BrainRot Mode
-        </button>
-      </div>
-      <div class="controls">
-        <div class="download-container">
-          <button id="offlineDownload">Download for Offline Viewing</button>
-          <button id="deleteOffline" style="display: none">
-            Delete Offline Video
-          </button>
-          <div id="downloadProgress" style="display: none">
-            <progress id="progressBar" value="0" max="100"></progress>
-            <span id="progressText">0%</span>
-          </div>
+        <div id="downloadProgress" style="display: none">
+          <progress id="progressBar" value="0" max="100"></progress>
+          <span id="progressText">0%</span>
         </div>
       </div>
     </div>
-    <script>
-      document.body.addEventListener("htmx:afterSwap", function (event) {
-        initializeVideoPlayer();
-      });
+  </div>
+  <script>
+    document.body.addEventListener("htmx:afterSwap", function (event) {
+      initializeVideoPlayer();
+    });
 
-      function initializeVideoPlayer() {
-        const source = "/static/{{ video_name }}/master.m3u8";
-        const video = document.querySelector("#player");
-        const loader = document.getElementById("loader");
-        const videoContainer = document.getElementById("videoContainer");
+    function initializeVideoPlayer() {
+      const source = "/static/{{ video_name }}/master.m3u8";
+      const video = document.querySelector("#player");
+      const loader = document.getElementById("loader");
+      const videoContainer = document.getElementById("videoContainer");
 
-        const defaultOptions = {
-          controls: [
-            "play",
-            "progress",
-            "current-time",
-            "mute",
-            "volume",
-            "settings",
-            "fullscreen",
-          ],
-          settings: ["quality"],
-          quality: {
-            default: "auto",
-            options: ["auto", 240, 360, 480],
-            forced: true,
-            onChange: (e) => updateQuality(e),
-          },
-        };
+      const defaultOptions = {
+        controls: [
+          "play",
+          "progress",
+          "current-time",
+          "mute",
+          "volume",
+          "settings",
+          "fullscreen",
+        ],
+        settings: ["quality"],
+        quality: {
+          default: "auto",
+          options: ["auto", 240, 360, 480],
+          forced: true,
+          onChange: (e) => updateQuality(e),
+        },
+      };
 
-        let player, hls;
+      let player, hls;
 
-        function initializePlayer() {
-          console.log("Initializing player...");
-          if (Hls.isSupported()) {
-            console.log("HLS is supported.");
-            hls = new Hls();
-            hls.loadSource(source);
-            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-              const availableQualities = hls.levels.map((l) => l.height);
-              defaultOptions.quality.options = ["auto", ...availableQualities];
-              defaultOptions.quality.default = "auto"; // Set default to auto
-              player = new Plyr(video, defaultOptions);
-              console.log("Player initialized.");
-              hideLoader();
-            });
-            hls.attachMedia(video);
-            window.hls = hls;
-          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = source;
+      function initializePlayer() {
+        console.log("Initializing player...");
+        if (Hls.isSupported()) {
+          console.log("HLS is supported.");
+          hls = new Hls();
+          hls.loadSource(source);
+          hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+            const availableQualities = hls.levels.map((l) => l.height);
+            defaultOptions.quality.options = ["auto", ...availableQualities];
+            defaultOptions.quality.default = "auto"; // Set default to auto
             player = new Plyr(video, defaultOptions);
             console.log("Player initialized.");
             hideLoader();
-          }
-        }
-
-        function hideLoader() {
-          loader.remove();
-          videoContainer.style.display = "block";
-          videoContainer.style.display = "block";
-        }
-
-        function updateQuality(newQuality) {
-          if (hls) {
-            if (newQuality === "auto") {
-              hls.currentLevel = -1; // -1 enables auto quality mode
-            } else {
-              hls.levels.forEach((level, levelIndex) => {
-                if (level.height === newQuality) {
-                  hls.currentLevel = levelIndex;
-                }
-              });
-            }
-          }
-        }
-
-        initializePlayer();
-
-        // Clean up Plyr and Hls.js instances when the page is unloaded
-        window.addEventListener("beforeunload", () => {
-          if (player) {
-            player.destroy();
-          }
-          if (hls) {
-            hls.destroy();
-          }
-        });
-      }
-      initializeVideoPlayer();
-
-      // Add this new function
-      function resetBodyPadding() {
-        document.body.style.paddingTop = "0";
-        document.body.style.paddingBottom = "0";
-      }
-
-      // Add this event listener
-      window.addEventListener("pagehide", function () {
-        resetBodyPadding();
-        document.body.dispatchEvent(new Event("streamPageUnloaded"));
-      });
-
-      window.addEventListener("beforeunload", function () {
-        document.body.style.paddingTop = "0";
-        document.body.style.paddingBottom = "0";
-      });
-
-      document
-        .getElementById("offlineDownload")
-        .addEventListener("click", function () {
-          const videoUrl = "/static/{{ video_name }}/master.m3u8";
-          const progressBar = document.getElementById("progressBar");
-          const progressText = document.getElementById("progressText");
-          document.getElementById("downloadProgress").style.display = "block";
-
-          downloadVideoForOffline(videoUrl, progressBar, progressText);
-        });
-      function updateOfflineStatus(videoName) {
-        caches.open("video-metadata").then((metadataCache) => {
-          metadataCache.match(videoName).then((cached) => {
-            const offlineDownload = document.getElementById("offlineDownload");
-            const deleteOffline = document.getElementById("deleteOffline");
-            if (cached) {
-              offlineDownload.style.display = "none";
-              deleteOffline.style.display = "block";
-            } else {
-              offlineDownload.style.display = "block";
-              deleteOffline.style.display = "none";
-            }
           });
-        });
+          hls.attachMedia(video);
+          window.hls = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = source;
+          player = new Plyr(video, defaultOptions);
+          console.log("Player initialized.");
+          hideLoader();
+        }
       }
-      document
-        .getElementById("offlineDownload")
-        .addEventListener("click", function () {
-          const videoUrl = "/static/{{ video_name }}/master.m3u8";
-          const progressBar = document.getElementById("progressBar");
-          const progressText = document.getElementById("progressText");
-          document.getElementById("downloadProgress").style.display = "block";
-          downloadVideoForOffline(videoUrl, progressBar, progressText);
-        });
 
-      document
-        .getElementById("deleteOffline")
-        .addEventListener("click", function () {
-          const videoName = "{{ video_name }}";
-          caches.delete("video-cache").then(() => {
-            caches.open("video-metadata").then((metadataCache) => {
-              metadataCache.delete(videoName).then(() => {
-                showToast("Offline video deleted successfully.");
-                updateOfflineStatus(videoName);
-              });
+      function hideLoader() {
+        loader.remove();
+        videoContainer.style.display = "block";
+        videoContainer.style.display = "block";
+      }
+
+      function updateQuality(newQuality) {
+        if (hls) {
+          if (newQuality === "auto") {
+            hls.currentLevel = -1; // -1 enables auto quality mode
+          } else {
+            hls.levels.forEach((level, levelIndex) => {
+              if (level.height === newQuality) {
+                hls.currentLevel = levelIndex;
+              }
+            });
+          }
+        }
+      }
+
+      initializePlayer();
+
+      // Clean up Plyr and Hls.js instances when the page is unloaded
+      window.addEventListener("beforeunload", () => {
+        if (player) {
+          player.destroy();
+        }
+        if (hls) {
+          hls.destroy();
+        }
+      });
+    }
+    initializeVideoPlayer();
+
+    // Add this new function
+    function resetBodyPadding() {
+      document.body.style.paddingTop = "0";
+      document.body.style.paddingBottom = "0";
+    }
+
+    // Add this event listener
+    window.addEventListener("pagehide", function () {
+      resetBodyPadding();
+      document.body.dispatchEvent(new Event("streamPageUnloaded"));
+    });
+
+    window.addEventListener("beforeunload", function () {
+      document.body.style.paddingTop = "0";
+      document.body.style.paddingBottom = "0";
+    });
+
+    document
+      .getElementById("offlineDownload")
+      .addEventListener("click", function () {
+        const videoUrl = "/static/{{ video_name }}/master.m3u8";
+        const progressBar = document.getElementById("progressBar");
+        const progressText = document.getElementById("progressText");
+        document.getElementById("downloadProgress").style.display = "block";
+
+        downloadVideoForOffline(videoUrl, progressBar, progressText);
+      });
+    function updateOfflineStatus(videoName) {
+      caches.open("video-metadata").then((metadataCache) => {
+        metadataCache.match(videoName).then((cached) => {
+          const offlineDownload = document.getElementById("offlineDownload");
+          const deleteOffline = document.getElementById("deleteOffline");
+          if (cached) {
+            offlineDownload.style.display = "none";
+            deleteOffline.style.display = "block";
+          } else {
+            offlineDownload.style.display = "block";
+            deleteOffline.style.display = "none";
+          }
+        });
+      });
+    }
+    document
+      .getElementById("offlineDownload")
+      .addEventListener("click", function () {
+        const videoUrl = "/static/{{ video_name }}/master.m3u8";
+        const progressBar = document.getElementById("progressBar");
+        const progressText = document.getElementById("progressText");
+        document.getElementById("downloadProgress").style.display = "block";
+        downloadVideoForOffline(videoUrl, progressBar, progressText);
+      });
+
+    document
+      .getElementById("deleteOffline")
+      .addEventListener("click", function () {
+        const videoName = "{{ video_name }}";
+        caches.delete("video-cache").then(() => {
+          caches.open("video-metadata").then((metadataCache) => {
+            metadataCache.delete(videoName).then(() => {
+              showToast("Offline video deleted successfully.");
+              updateOfflineStatus(videoName);
             });
           });
         });
+      });
 
-      updateOfflineStatus("{{ video_name }}");
-      function downloadVideoForOffline(videoUrl, progressBar, progressText) {
-          const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
-          const videoName = "{{ video_name }}";
-          let totalSegments = 0;
-          let downloadedSegments = 0;
-      
-          caches.open("video-metadata").then((metadataCache) => {
-              metadataCache.match(videoName).then((cached) => {
-                  if (cached) {
-                      showToast("Video is already cached for offline viewing.");
-                      return;
-                  }
-      
-                  fetch(videoUrl)
-                      .then((response) => response.text())
-                      .then((master) => {
-                          const parser = new m3u8Parser.Parser();
-                          parser.push(master);
-                          parser.end();
-                          const masterPlaylist = parser.manifest;
-      
-                          // Cache the master playlist
-                          return caches.open("video-cache").then((cache) => {
-                              return cache.put(videoUrl, new Response(master));
-                          }).then(() => {
-                              // Calculate total segments across all playlists
-                              return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
-                                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
-      
-                                  return fetch(playlistUrl)
-                                      .then((response) => response.text())
-                                      .then((playlistContent) => {
-                                          const playlistParser = new m3u8Parser.Parser();
-                                          playlistParser.push(playlistContent);
-                                          playlistParser.end();
-                                          totalSegments += playlistParser.manifest.segments.length;
-      
-                                          // Cache the individual playlist
-                                          return caches.open("video-cache").then((cache) => {
-                                              return cache.put(playlistUrl, new Response(playlistContent));
-                                          }).then(() => {
-                                              return playlistParser.manifest.segments;
-                                          });
-                                      });
-                              }));
-                          }).then((allSegments) => {
-                              // Download all playlists
-                              return Promise.all(allSegments.map((segments, index) => {
-                                  return Promise.all(
-                                      segments.map((segment) => {
-                                          const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
-                                          return fetch(segmentUrl)
-                                              .then((response) => response.blob())
-                                              .then((blob) => {
-                                                  return caches.open("video-cache").then((cache) => {
-                                                      return cache.put(segmentUrl, new Response(blob));
-                                                  });
-                                              })
-                                              .then(() => {
-                                                  downloadedSegments++;
-                                                  updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
-                                              });
-                                      })
-                                  );
-                              }));
-                          }).then(() => {
-                              metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
-                                  showToast("Video successfully cached for offline viewing.");
-                                  updateOfflineStatus(videoName);
-                              });
-                          });
+    updateOfflineStatus("{{ video_name }}");
+    function downloadVideoForOffline(videoUrl, progressBar, progressText) {
+      const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
+      const videoName = "{{ video_name }}";
+      let totalSegments = 0;
+      let downloadedSegments = 0;
+
+      caches.open("video-metadata").then((metadataCache) => {
+        metadataCache.match(videoName).then((cached) => {
+          if (cached) {
+            showToast("Video is already cached for offline viewing.");
+            return;
+          }
+
+          fetch(videoUrl)
+            .then((response) => response.text())
+            .then((master) => {
+              const parser = new m3u8Parser.Parser();
+              parser.push(master);
+              parser.end();
+              const masterPlaylist = parser.manifest;
+
+              // Cache the master playlist
+              return caches.open("video-cache").then((cache) => {
+                return cache.put(videoUrl, new Response(master));
+              }).then(() => {
+                // Calculate total segments across all playlists
+                return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
+                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
+
+                  return fetch(playlistUrl)
+                    .then((response) => response.text())
+                    .then((playlistContent) => {
+                      const playlistParser = new m3u8Parser.Parser();
+                      playlistParser.push(playlistContent);
+                      playlistParser.end();
+                      totalSegments += playlistParser.manifest.segments.length;
+
+                      // Cache the individual playlist
+                      return caches.open("video-cache").then((cache) => {
+                        return cache.put(playlistUrl, new Response(playlistContent));
+                      }).then(() => {
+                        return playlistParser.manifest.segments;
                       });
+                    });
+                }));
+              }).then((allSegments) => {
+                // Download all playlists
+                return Promise.all(allSegments.map((segments, index) => {
+                  return Promise.all(
+                    segments.map((segment) => {
+                      const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
+                      return fetch(segmentUrl)
+                        .then((response) => response.blob())
+                        .then((blob) => {
+                          return caches.open("video-cache").then((cache) => {
+                            return cache.put(segmentUrl, new Response(blob));
+                          });
+                        })
+                        .then(() => {
+                          downloadedSegments++;
+                          updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
+                        });
+                    })
+                  );
+                }));
+              }).then(() => {
+                metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
+                  showToast("Video successfully cached for offline viewing.");
+                  updateOfflineStatus(videoName);
+                });
               });
-          });
-      }
+            });
+        });
+      });
+    }
 
-      function updateProgress(
-        downloadedSegments,
-        totalSegments,
-        progressBar,
-        progressText
-      ) {
-        if (totalSegments > 0) {
-          const progress = (downloadedSegments / totalSegments) * 100;
-          progressBar.value = Math.min(100, Math.max(0, progress));
-          progressText.textContent = `${Math.round(progress)}%`;
-        }
+    function updateProgress(
+      downloadedSegments,
+      totalSegments,
+      progressBar,
+      progressText
+    ) {
+      if (totalSegments > 0) {
+        const progress = (downloadedSegments / totalSegments) * 100;
+        progressBar.value = Math.min(100, Math.max(0, progress));
+        progressText.textContent = `${Math.round(progress)}%`;
       }
+    }
 
-      function showToast(message, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
+    function showToast(message, duration = 3000) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
         toast.classList.add('show');
-    }, 10);
+      }, 10);
 
-    setTimeout(() => {
+      setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
-            document.body.removeChild(toast);
+          document.body.removeChild(toast);
         }, 300);
-    }, duration);
-}
+      }, duration);
+    }
 
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>
