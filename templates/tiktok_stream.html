@@ -152,16 +152,6 @@
     <script src="https://unpkg.com/htmx.org@1.6.1"></script> <!-- Include HTMX -->
     
     <script>
-
-        let isScrolling = false;
-        let lastScrollTime = 0;
-        const scrollCooldown = 200; // 200ms cooldown
-       
-
-        // Touch events for mobile swiping
-        let touchStartY = 0;
-        
-
         let currentVideoName = '{{ video_name }}';
         let isTransitioning = false;
         let currentPlyr;
@@ -499,45 +489,6 @@
             document.body.removeChild(toast);
         }, 300);
     }, duration);
-}
-window.addEventListener('wheel', handleScroll, { passive: false });
-window.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
-window.addEventListener('touchmove', handleSwipe, { passive: false });
-
-
-function handleScroll(event) {
-    event.preventDefault();
-    handleScrollOrSwipe(event.deltaY > 0 ? 1 : -1);
-}
-
-function handleSwipe(event) {
-    event.preventDefault();
-    const touchEndY = event.touches[0].clientY;
-    const deltaY = touchStartY - touchEndY;
-    if (Math.abs(deltaY) > 50) { // Threshold for swipe detection
-        handleScrollOrSwipe(deltaY > 0 ? 1 : -1);
-    }
-}
-
-function handleScrollOrSwipe(direction) {
-    const currentTime = new Date().getTime();
-    if (isScrolling || currentTime - lastScrollTime < scrollCooldown) {
-        return;
-    }
-
-    isScrolling = true;
-    lastScrollTime = currentTime;
-
-    const currentVideoElement = document.querySelector('.video-container:nth-child(2)');
-    const targetElement = direction > 0 ? currentVideoElement.nextElementSibling : currentVideoElement.previousElementSibling;
-
-    if (targetElement && targetElement.classList.contains('video-container')) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    setTimeout(() => {
-        isScrolling = false;
-    }, scrollCooldown);
 }
 
     </script>
