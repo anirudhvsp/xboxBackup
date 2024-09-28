@@ -108,6 +108,25 @@
         transform-origin: 50% 50%;
     }
 
+    .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1002;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+
     </style>
 </head>
 <body>
@@ -367,12 +386,12 @@
 
     document.getElementById('downloadButton').addEventListener('click', function() {
         if (currentDownloadingVideo) {
-            alert('A download is already in progress.');
+            showToast('A download is already in progress.');
             return;
         }
 
         if (!currentVideoName) {
-            alert('No video is currently playing.');
+            showToast('No video is currently playing.');
             return;
         }
 
@@ -389,7 +408,7 @@
         caches.open("video-metadata").then((metadataCache) => {
             metadataCache.match(videoId).then((cached) => {
                 if (cached) {
-                    alert("Video is already cached for offline viewing.");
+                    showToast("Video is already cached for offline viewing.");
                     currentDownloadingVideo = null;
                     return;
                 }
@@ -444,7 +463,7 @@
                             }));
                         }).then(() => {
                             metadataCache.put(videoId, new Response(JSON.stringify({ cached: true }))).then(() => {
-                                alert("Video successfully cached for offline viewing.");
+                                showToast("Video successfully cached for offline viewing.");
                                 currentDownloadingVideo = null;
                                 setProgress(0);
                             });
@@ -453,6 +472,25 @@
             });
         });
     }
+
+    function showToast(message, duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, duration);
+}
+
     </script>
 </body>
 </html>

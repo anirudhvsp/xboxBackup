@@ -194,6 +194,25 @@
         text-align: center;
         margin-top: 5px;
       }
+
+      .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1002;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
     </style>
   </head>
   <body hx-ext="head-support">
@@ -381,7 +400,7 @@
           caches.delete("video-cache").then(() => {
             caches.open("video-metadata").then((metadataCache) => {
               metadataCache.delete(videoName).then(() => {
-                alert("Offline video deleted successfully.");
+                showToast("Offline video deleted successfully.");
                 updateOfflineStatus(videoName);
               });
             });
@@ -398,7 +417,7 @@
           caches.open("video-metadata").then((metadataCache) => {
               metadataCache.match(videoName).then((cached) => {
                   if (cached) {
-                      alert("Video is already cached for offline viewing.");
+                      showToast("Video is already cached for offline viewing.");
                       return;
                   }
       
@@ -456,7 +475,7 @@
                               }));
                           }).then(() => {
                               metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
-                                  alert("Video successfully cached for offline viewing.");
+                                  showToast("Video successfully cached for offline viewing.");
                                   updateOfflineStatus(videoName);
                               });
                           });
@@ -477,6 +496,25 @@
           progressText.textContent = `${Math.round(progress)}%`;
         }
       }
+
+      function showToast(message, duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, duration);
+}
+
     </script>
   </body>
 </html>
