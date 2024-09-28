@@ -108,29 +108,30 @@ document.addEventListener('htmx:afterSwap', () => {
         cursor: pointer;
     }
     .media-grid-page {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        padding: 8px;
-    }
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
 
-    @media screen and (min-width: 768px) {
-        .media-grid-page {
-            grid-template-columns: repeat(6, 1fr);
-        }
+@media screen and (min-width: 768px) {
+    .media-grid-page {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
+}
 
-    @media screen and (min-width: 1024px) {
-        .media-grid-page {
-            grid-template-columns: repeat(9, 1fr);
-        }
+@media screen and (min-width: 1024px) {
+    .media-grid-page {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
+}
 
-    @media screen and (min-width: 1440px) {
-        .media-grid-page {
-            grid-template-columns: repeat(12, 1fr);
-        }
+@media screen and (min-width: 1440px) {
+    .media-grid-page {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
+}
+
 
     .media-tile {
         aspect-ratio: 1 / 1;
