@@ -200,6 +200,7 @@
                     });
                     if (autoplay) {
                         player.play();
+                        playerElement.muted = false; // Unmute the first video
                     }
                 });
             } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
@@ -209,11 +210,13 @@
                 });
                 if (autoplay) {
                     player.play();
+                    playerElement.muted = false; // Unmute the first video
                 }
             }
 
             return player;
         }
+
 
         async function initializeVideos() {
             
