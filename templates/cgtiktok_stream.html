@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
-    <title>CG Video Navigation</title>
+    <title>Video Navigation</title>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
     <style>
         :root {
@@ -151,22 +151,27 @@
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="window.location.href='/home'">←</button>
+    <button class="back-button" onclick="window.location.href='/home'">&larr;</button>
     <button id="downloadButton" class="download-button">
         <svg class="progress-ring" width="50" height="50">
             <circle class="progress-ring__circle" stroke="white" stroke-width="2" fill="transparent" r="23" cx="25" cy="25"/>
         </svg>
         <span>⬇️</span>
     </button>
-    <button class="share-button" onclick="shareUrl()">🔗</button>
+    <button class="share-button" onclick="shareUrl()">&#128279;</button>
     <div class="video-wrapper" id="videoWrapper">
         <div class="ghost-loading" id="previousGhostLoading"></div>
+
+
+        
+
+
         <div class="ghost-loading" id="nextGhostLoading"></div>
     </div>
 
     <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script> <!-- Include HTMX -->
     
     <script>
         let currentVideoName = '{{ video_name }}';
