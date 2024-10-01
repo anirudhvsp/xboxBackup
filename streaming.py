@@ -381,7 +381,7 @@ def get_previous_cg_video(current_video):
 def cgtiktok_stream(video_name):
     prev_video = get_previous_cg_video(video_name)
     next_video = get_next_cg_video(video_name)
-    return render_template('tiktok_stream.html', video_name=video_name, prev_video=prev_video, next_video=next_video)
+    return render_template('cgtiktok_stream.html', video_name=video_name, prev_video=prev_video, next_video=next_video)
 
 @app.route('/cgtiktok/next/<current_video>')
 def next_cgtiktok_video(current_video):
