@@ -361,6 +361,38 @@ def subscribe():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+def get_cg_videos():
+    return [item for item in os.listdir(STREAMING_DIR) if os.path.isdir(os.path.join(STREAMING_DIR, item)) and item.startswith("cg_")]
+
+def get_next_cg_video(current_video):
+    cg_videos = get_cg_videos()
+    current_index = cg_videos.index(current_video)
+    next_index = (current_index + 1) % len(cg_videos)
+    return cg_videos[next_index]
+
+def get_previous_cg_video(current_video):
+    cg_videos = get_cg_videos()
+    current_index = cg_videos.index(current_video)
+    previous_index = (current_index - 1) % len(cg_videos)
+    return cg_videos[previous_index]
+
+@app.route('/cgtiktok/<video_name>')
+def cgtiktok_stream(video_name):
+    prev_video = get_previous_cg_video(video_name)
+    next_video = get_next_cg_video(video_name)
+    return render_template('tiktok_stream.html', video_name=video_name, prev_video=prev_video, next_video=next_video)
+
+@app.route('/cgtiktok/next/<current_video>')
+def next_cgtiktok_video(current_video):
+    next_video = get_next_cg_video(current_video)
+    return jsonify({'next_video': next_video})
+
+@app.route('/cgtiktok/previous/<current_video>')
+def previous_cgtiktok_video(current_video):
+    previous_video = get_previous_cg_video(current_video)
+    return jsonify({'previous_video': previous_video})
+
 if __name__ == '__main__':
     app.run(debug=False)
 
