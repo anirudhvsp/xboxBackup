@@ -321,22 +321,20 @@
     }
         
 
-    function observeVideoElement(videoId) {
+    let isCooldown = false; // Cooldown variable
+
+function observeVideoElement(videoId) {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                console.log('Video in viewport:', videoId);
                 const currentVideoIndexInList = loadedVideos.indexOf(videoId);
 
                 if (currentVideoIndexInList === 0 || currentVideoIndexInList === 1) {
-                    console.log('Near the beginning of the video list, loading previous videos...');
                     fetchPreviousVideo(videoId);
                     fetchPreviousVideo(loadedVideos[0]);
                 }
 
-                // If it's the second-to-last or third-to-last video, load new next videos
                 if (currentVideoIndexInList === loadedVideos.length - 2 || currentVideoIndexInList === loadedVideos.length - 3) {
-                    console.log('Near the end of the video list, loading next videos...');
                     fetchNextVideo(loadedVideos[loadedVideos.length - 1]);
                     fetchNextVideo(loadedVideos[loadedVideos.length - 2]);
                 }
@@ -346,7 +344,7 @@
                     currentVideo.play();
                     currentVideo.muted = false;
                 }
-                
+
                 // Pause all other videos
                 const allVideos = document.querySelectorAll('video');
                 allVideos.forEach(video => {
@@ -355,6 +353,15 @@
                         video.muted = true;
                     }
                 });
+
+                // Implement the scrolling with cooldown
+                if (!isCooldown) {
+                    isCooldown = true;
+                    document.getElementById(`video-${videoId}`).scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => {
+                        isCooldown = false;
+                    }, 200); // Cooldown duration
+                }
             } else {
                 const video = document.getElementById(`player-${videoId}`);
                 if (video) {
@@ -370,6 +377,7 @@
         observer.observe(videoElement);
     }
 }
+        
         
 
         function fetchPreviousVideo(currentVideoId) {
