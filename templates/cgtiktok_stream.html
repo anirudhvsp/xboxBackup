@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
+    <title>CG Video Navigation</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+        .video-wrapper {
+            display: grid;
+            grid-template-rows: 100vh 100vh 100vh;
+            transition: transform 0.5s ease;
+        }
+        .video-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        video {
+            object-fit: cover;
+            width: 100vw;
+            height: 100vh;
+        }
+        .plyr__video-wrapper {
+            height: 100vh;
+        }
+        /* Snapping for smooth transitions */
+        html, body {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .video-container {
+            scroll-snap-align: start;
+        }
+
+        .ghost-loading {
+            height: 100vh;
+            background-color: #1a1a1a;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+        }
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .download-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px; /* Changed from left: 20px to right: 20px */
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    .download-button:hover {
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .progress-ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .progress-ring__circle {
+        transition: 0.35s stroke-dashoffset;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+
+    .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1002;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+}
+.share-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.share-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='/home'">←</button>
+    <button id="downloadButton" class="download-button">
+        <svg class="progress-ring" width="50" height="50">
+            <circle class="progress-ring__circle" stroke="white" stroke-width="2" fill="transparent" r="23" cx="25" cy="25"/>
+        </svg>
+        <span>⬇️</span>
+    </button>
+    <button class="share-button" onclick="shareUrl()">🔗</button>
+    <div class="video-wrapper" id="videoWrapper">
+        <div class="ghost-loading" id="previousGhostLoading"></div>
+        <div class="ghost-loading" id="nextGhostLoading"></div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    
+    <script>
+        let currentVideoName = '{{ video_name }}';
+        let isTransitioning = false;
+        let currentPlyr;
+        let loadedVideos = [currentVideoName];
+        let currentVideoIndex = 1; // Index of the current video in the loadedVideos array
+        let currentDownloadingVideo = null;
+        window.onload = async () => {
+            await initializeVideos();
+            document.getElementById('video-'+currentVideoName).scrollIntoView();
+            // handleViewportChange();
+        };
+
+        function preloadVideo(playerElement, videoName, autoplay = false) {
+            const source = `/static/${videoName}/master.m3u8`;
+            let hls, player;
+
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(source);
+                hls.attachMedia(playerElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    player = new Plyr(playerElement, {
+                        controls: ["play-large", "play"],
+                    });
+                    if (autoplay) {
+                        player.play();
+                        playerElement.muted = false; // Unmute the first video
+                    }
+                });
+            } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                playerElement.src = source;
+                player = new Plyr(playerElement, {
+                    controls: ['play-large', 'play'],
+                });
+                if (autoplay) {
+                    player.play();
+                    playerElement.muted = false; // Unmute the first video
+                }
+            }
+
+            return player;
+        }
+
+
+        async function initializeVideos() {
+            
+            
+            var x = createVideoElement(currentVideoName, 'current');
+            currentPlyr = preloadVideo(x, currentVideoName, true);
+            await fetchAndPreloadAdjacentVideos(currentVideoName);
+        }
+        
+        function fetchAndPreloadAdjacentVideos(videoName) {
+            var temp = videoName;
+            fetch(`/cgTiktok/previous/${temp}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(temp);
+                    const prevVideoElement = createVideoElement(data.previous_video, 'previous');
+                    preloadVideo(prevVideoElement, data.previous_video);
+                    temp = data.previous_video;
+                    loadedVideos.unshift(data.previous_video);
+                    fetch(`/cgTiktok/previous/${temp}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const prevVideoElement = createVideoElement(data.previous_video, 'previous');
+                        preloadVideo(prevVideoElement, data.previous_video);
+                        temp = data.previous_video;
+                        loadedVideos.unshift(data.previous_video);
+                    });
+                });
+
+            temp = videoName;
+            fetch(`/cgTiktok/next/${temp}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(temp);
+                    const nextVideoElement = createVideoElement(data.next_video, 'next');
+                    preloadVideo(nextVideoElement, data.next_video);
+                    temp = data.next_video;
+                    loadedVideos.push(data.next_video);
+                    fetch(`/cgTiktok/next/${temp}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const nextVideoElement = createVideoElement(data.next_video, 'next');
+                        preloadVideo(nextVideoElement, data.next_video);
+                        temp = data.next_video;
+                        loadedVideos.push(data.next_video);
+                    });
+                });
+        }
+               
+        function createVideoElement(videoId, position) {
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            videoContainer.id = `video-${videoId}`;
+
+            const video = document.createElement('video');
+            video.id = `player-${videoId}`;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('muted', '');
+
+            videoContainer.appendChild(video);
+
+            const wrapper = document.getElementById('videoWrapper');
+            const fragment = document.createDocumentFragment();
+
+            // Add the video container to the fragment
+            fragment.appendChild(videoContainer);
+
+            if (position === 'next') {
+                const lastNonGhostChild = Array.from(wrapper.children).reverse().find(child => !child.classList.contains('ghost-loading'));
+                if (lastNonGhostChild) {
+                    wrapper.insertBefore(fragment, lastNonGhostChild.nextSibling);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            } else if (position === 'current') {
+                const ghostLoadingDivs = wrapper.querySelectorAll('.ghost-loading');
+                if (ghostLoadingDivs.length >= 2) {
+                    wrapper.insertBefore(fragment, ghostLoadingDivs[1]);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            } else {
+                const firstNonGhostChild = Array.from(wrapper.children).find(child => !child.classList.contains('ghost-loading'));
+                if (firstNonGhostChild) {
+                    wrapper.insertBefore(fragment, firstNonGhostChild);
+                } else {
+                    wrapper.appendChild(fragment);
+                }
+            }
+
+            // Observe the new video for viewport changes
+            observeVideoElement(videoId);
+
+            // Return the video element so it can be preloaded
+            return video;
+        }
+
+
+    function loadNewVideo(videoId, position) {
+        const newVideoElement = createVideoElement(videoId, position);
+        preloadVideo(newVideoElement, videoId);
+    }
+        
+
+    function observeVideoElement(videoId) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                console.log('Video in viewport:', videoId);
+                const currentVideoIndexInList = loadedVideos.indexOf(videoId);
+
+                if (currentVideoIndexInList === 0 || currentVideoIndexInList === 1) {
+                    console.log('Near the beginning of the video list, loading previous videos...');
+                    fetchPreviousVideo(videoId);
+                    fetchPreviousVideo(loadedVideos[0]);
+                }
+
+                // If it's the second-to-last or third-to-last video, load new next videos
+                if (currentVideoIndexInList === loadedVideos.length - 2 || currentVideoIndexInList === loadedVideos.length - 3) {
+                    console.log('Near the end of the video list, loading next videos...');
+                    fetchNextVideo(loadedVideos[loadedVideos.length - 1]);
+                    fetchNextVideo(loadedVideos[loadedVideos.length - 2]);
+                }
+
+                const currentVideo = document.getElementById(`player-${videoId}`);
+                if (currentVideo) {
+                    currentVideo.play();
+                    currentVideo.muted = false;
+                }
+                
+                // Pause all other videos
+                const allVideos = document.querySelectorAll('video');
+                allVideos.forEach(video => {
+                    if (video.id !== `player-${videoId}`) {
+                        video.pause();
+                        video.muted = true;
+                    }
+                });
+            } else {
+                const video = document.getElementById(`player-${videoId}`);
+                if (video) {
+                    video.pause();
+                    video.muted = true;
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    const videoElement = document.getElementById("video-" + videoId);
+    if (videoElement) {
+        observer.observe(videoElement);
+    }
+}
+        
+
+        function fetchPreviousVideo(currentVideoId) {
+            fetch(`/cgTiktok/previous/${currentVideoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const prevVideoId = data.previous_video;
+                    if (!loadedVideos.includes(prevVideoId)) {
+                        console.log('Preloading previous video:', prevVideoId);
+                        const prevVideoElement = createVideoElement(prevVideoId, 'previous');
+                        preloadVideo(prevVideoElement, prevVideoId);
+                        loadedVideos.unshift(prevVideoId); // Add to the beginning of the list
+                    }
+                });
+        }
+
+        function fetchNextVideo(currentVideoId) {
+            fetch(`/cgTiktok/next/${currentVideoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const nextVideoId = data.next_video;
+                    if (!loadedVideos.includes(nextVideoId)) {
+                        console.log('Preloading next video:', nextVideoId);
+                        const nextVideoElement = createVideoElement(nextVideoId, 'next');
+                        preloadVideo(nextVideoElement, nextVideoId);
+                        loadedVideos.push(nextVideoId); // Add to the end of the list
+                    }
+                });
+        }
+        
+
+        function setProgress(percent) {
+        const circle = document.querySelector('.progress-ring__circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
+    }
+
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        if (currentDownloadingVideo) {
+            showToast('A download is already in progress.');
+            return;
+        }
+
+        if (!currentVideoName) {
+            showToast('No video is currently playing.');
+            return;
+        }
+
+        const videoUrl = `/static/${currentVideoName}/master.m3u8`;
+        currentDownloadingVideo = currentVideoName;
+
+        downloadVideoForOffline(videoUrl, currentVideoName);
+    });
+    function downloadVideoForOffline(videoUrl, videoId) {
+        const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
+        let totalSegments = 0;
+        let downloadedSegments = 0;
+
+        caches.open("video-metadata").then((metadataCache) => {
+            metadataCache.match(videoId).then((cached) => {
+                if (cached) {
+                    showToast("Video is already cached for offline viewing.");
+                    currentDownloadingVideo = null;
+                    return;
+                }
+
+                fetch(videoUrl)
+                    .then((response) => response.text())
+                    .then((master) => {
+                        const parser = new m3u8Parser.Parser();
+                        parser.push(master);
+                        parser.end();
+                        const masterPlaylist = parser.manifest;
+
+                        return caches.open("video-cache").then((cache) => {
+                            return cache.put(videoUrl, new Response(master));
+                        }).then(() => {
+                            return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
+                                const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
+
+                                return fetch(playlistUrl)
+                                    .then((response) => response.text())
+                                    .then((playlistContent) => {
+                                        const playlistParser = new m3u8Parser.Parser();
+                                        playlistParser.push(playlistContent);
+                                        playlistParser.end();
+                                        totalSegments += playlistParser.manifest.segments.length;
+
+                                        return caches.open("video-cache").then((cache) => {
+                                            return cache.put(playlistUrl, new Response(playlistContent));
+                                        }).then(() => {
+                                            return playlistParser.manifest.segments;
+                                        });
+                                    });
+                            }));
+                        }).then((allSegments) => {
+                            return Promise.all(allSegments.map((segments, index) => {
+                                return Promise.all(
+                                    segments.map((segment) => {
+                                        const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
+                                        return fetch(segmentUrl)
+                                            .then((response) => response.blob())
+                                            .then((blob) => {
+                                                return caches.open("video-cache").then((cache) => {
+                                                    return cache.put(segmentUrl, new Response(blob));
+                                                });
+                                            })
+                                            .then(() => {
+                                                downloadedSegments++;
+                                                setProgress((downloadedSegments / totalSegments) * 100);
+                                            });
+                                    })
+                                );
+                            }));
+                        }).then(() => {
+                            metadataCache.put(videoId, new Response(JSON.stringify({ cached: true }))).then(() => {
+                                showToast("Video successfully cached for offline viewing.");
+                                currentDownloadingVideo = null;
+                                setProgress(0);
+                            });
+                        });
+                    });
+            });
+        });
+    }
+
+    function showToast(message, duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, duration);
+}
+
+
+function shareUrl() {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl).then(() => {
+        showToast('URL copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy URL: ', err);
+        showToast('Failed to copy URL');
+    });
+}
+
+    </script>
+</body>
+</html>
