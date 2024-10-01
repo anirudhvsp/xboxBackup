@@ -60,7 +60,7 @@ def media_page(page):
 
     # Get videos and sort them by creation date
     for item in os.listdir(STREAMING_DIR):
-        if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not item.startswith("test"):
+        if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not (item.startswith("test") or item.startswith("cg_")):
             m3u8_file = os.path.join(STREAMING_DIR, item, 'master.m3u8')
             if not os.path.exists(m3u8_file):
                 continue  # Skip this video if master.m3u8 doesn't exist
@@ -256,13 +256,13 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 def get_next_video(current_video):
-    all_videos = [item for item in os.listdir(STREAMING_DIR) if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not item.startswith("test")]
+    all_videos = [item for item in os.listdir(STREAMING_DIR) if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not (item.startswith("test") or item.startswith("cg_"))]
     current_index = all_videos.index(current_video)
     next_index = (current_index + 1) % len(all_videos)
     return all_videos[next_index]
 
 def get_previous_video(current_video):
-    all_videos = [item for item in os.listdir(STREAMING_DIR) if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not item.startswith("test")]
+    all_videos = [item for item in os.listdir(STREAMING_DIR) if os.path.isdir(os.path.join(STREAMING_DIR, item)) and not (item.startswith("test") or item.startswith("cg_"))]
     current_index = all_videos.index(current_video)
     previous_index = (current_index - 1) % len(all_videos)
     return all_videos[previous_index]
