@@ -320,14 +320,20 @@
         preloadVideo(newVideoElement, videoId);
     }
         
-
-    let isCooldown = false; // Cooldown variable
+let isCooldown = false; // Cooldown variable
+let lastVideoChangeTime = 0; // To track the last video change
 
 function observeVideoElement(videoId) {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const currentVideoIndexInList = loadedVideos.indexOf(videoId);
+                const currentTime = Date.now();
+
+                // Check if enough time has passed since the last video change
+                if (currentTime - lastVideoChangeTime < 200) return; // Prevent too fast changes
+
+                lastVideoChangeTime = currentTime; // Update last video change time
 
                 if (currentVideoIndexInList === 0 || currentVideoIndexInList === 1) {
                     fetchPreviousVideo(videoId);
@@ -354,7 +360,7 @@ function observeVideoElement(videoId) {
                     }
                 });
 
-                // Implement the scrolling with cooldown
+                // Scroll into view
                 if (!isCooldown) {
                     isCooldown = true;
                     document.getElementById(`video-${videoId}`).scrollIntoView({ behavior: 'smooth' });
@@ -377,6 +383,7 @@ function observeVideoElement(videoId) {
         observer.observe(videoElement);
     }
 }
+
         
         
 
