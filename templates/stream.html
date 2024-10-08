@@ -242,7 +242,9 @@
   <div id="videoContainer" style="display: none">
     <div class="video-container">
       <div class="video-wrapper">
-        <video id="player" playsinline controls></video>
+        <video id="player" playsinline controls>
+          <track kind="subtitles" label="English" srclang="en" src="/static/{{ video_name }}.srt" default>
+        </video>
       </div>
     </div>
     <!-- Add this right before the .controls div -->
