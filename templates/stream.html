@@ -257,7 +257,7 @@
     });
 
     
-    function initializeVideoPlayer() {
+    async function initializeVideoPlayer() {
       const source = "/static/{{ video_name }}/master.m3u8";
       const video = document.querySelector("#player");
       const subtitleSource = `/static/{{ video_name }}.srt`;
