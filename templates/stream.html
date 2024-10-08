@@ -284,8 +284,6 @@
       // Load saved time on initialization
       video.addEventListener("loadedmetadata", loadSavedTime);
       
-      // Save time regularly during playback
-      video.addEventListener("timeupdate", saveCurrentTime);
 
 
       const defaultOptions = {
@@ -563,7 +561,7 @@
         }, 300);
       }, duration);
     }
-
+    const video = document.querySelector("#player");
     let lastTapTime = 0;
     video.addEventListener("touchend", (event) => {
       const currentTime = new Date().getTime();
@@ -588,7 +586,10 @@
     video.currentTime = Math.max(0, video.currentTime - 5);
   }
 });
+      // Save time regularly during playback
+      video.addEventListener("timeupdate", saveCurrentTime);
 
+    
   </script>
 </body>
 </html>
