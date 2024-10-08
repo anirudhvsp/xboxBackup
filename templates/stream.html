@@ -264,8 +264,6 @@
       const loader = document.getElementById("loader");
       const videoContainer = document.getElementById("videoContainer");
       const cacheName = "video-timestamps";
-      const video = document.querySelector("#player");
-      
       // Save the current timestamp to CacheStorage
       async function saveCurrentTime() {
         const cache = await caches.open(cacheName);
