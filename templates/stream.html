@@ -342,8 +342,8 @@ function addSeekButtons() {
       forwardButton.onclick = () => video.currentTime = Math.min(video.duration, video.currentTime + 5);
 
       // Insert the buttons next to the play button
-      const controls = document.querySelector(".plyr__controls");
-      const playButton = controls.querySelector(".plyr__control--overlays .plyr__control--play");
+        const controls = document.querySelector(".plyr__controls");
+      const playButton = controls.querySelector(".plyr__control[data-plyr='play']");
       if (playButton) {
         // Check if nextSibling exists
         if (playButton.nextSibling) {
