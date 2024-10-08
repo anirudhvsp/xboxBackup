@@ -257,7 +257,7 @@
     });
 
     async function saveCurrentTime() {
-        const cache = await caches.open(cacheName);
+        const cache = await caches.open("video-timestamps");
         const timeData = new Response(JSON.stringify({ time: video.currentTime }));
         await cache.put(`/timestamps/{{ video_name }}`, timeData);
       }
