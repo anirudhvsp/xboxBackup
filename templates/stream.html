@@ -256,7 +256,11 @@
       initializeVideoPlayer();
     });
 
-    
+    async function saveCurrentTime() {
+        const cache = await caches.open(cacheName);
+        const timeData = new Response(JSON.stringify({ time: video.currentTime }));
+        await cache.put(`/timestamps/{{ video_name }}`, timeData);
+      }
     async function initializeVideoPlayer() {
       const source = "/static/{{ video_name }}/master.m3u8";
       const video = document.querySelector("#player");
@@ -265,11 +269,7 @@
       const videoContainer = document.getElementById("videoContainer");
       const cacheName = "video-timestamps";
       // Save the current timestamp to CacheStorage
-      async function saveCurrentTime() {
-        const cache = await caches.open(cacheName);
-        const timeData = new Response(JSON.stringify({ time: video.currentTime }));
-        await cache.put(`/timestamps/{{ video_name }}`, timeData);
-      }
+      
       
       // Load the saved timestamp from CacheStorage
       async function loadSavedTime() {
