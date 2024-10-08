@@ -256,11 +256,15 @@
       initializeVideoPlayer();
     });
 
-    async function saveCurrentTime() {
-        const cache = await caches.open("video-timestamps");
-        const timeData = new Response(JSON.stringify({ time: video.currentTime }));
-        await cache.put(`/timestamps/{{ video_name }}`, timeData);
-      }
+    // Save current time every 5 seconds
+let cacheInterval = setInterval(saveCurrentTime, 5000);
+
+// Function to save the current playback time to CacheStorage
+async function saveCurrentTime() {
+    const cache = await caches.open("video-timestamps");
+    const timeData = new Response(JSON.stringify({ time: video.currentTime }));
+    await cache.put(`/timestamps/{{ video_name }}`, timeData);
+}
     async function initializeVideoPlayer() {
       const source = "/static/{{ video_name }}/master.m3u8";
       const video = document.querySelector("#player");
@@ -273,13 +277,13 @@
       
       // Load the saved timestamp from CacheStorage
       async function loadSavedTime() {
-        const cache = await caches.open(cacheName);
-        const match = await cache.match(`/timestamps/{{ video_name }}`);
-        if (match) {
-          const data = await match.json();
-          video.currentTime = data.time || 0;
-        }
-      }
+    const cache = await caches.open("video-timestamps");
+    const match = await cache.match(`/timestamps/{{ video_name }}`);
+    if (match) {
+        const data = await match.json();
+        video.currentTime = data.time || 0;
+    }
+}
       
       // Load saved time on initialization
       video.addEventListener("loadedmetadata", loadSavedTime);
@@ -587,7 +591,8 @@
   }
 });
       // Save time regularly during playback
-      video.addEventListener("timeupdate", saveCurrentTime);
+     video.addEventListener("ended", () => clearInterval(cacheInterval));
+     window.addEventListener("beforeunload", () => clearInterval(cacheInterval));
 
     
   </script>
