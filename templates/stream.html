@@ -263,6 +263,31 @@
       const subtitleSource = `/static/{{ video_name }}.srt`;
       const loader = document.getElementById("loader");
       const videoContainer = document.getElementById("videoContainer");
+      const cacheName = "video-timestamps";
+      const video = document.querySelector("#player");
+      
+      // Save the current timestamp to CacheStorage
+      async function saveCurrentTime() {
+        const cache = await caches.open(cacheName);
+        const timeData = new Response(JSON.stringify({ time: video.currentTime }));
+        await cache.put(`/timestamps/{{ video_name }}`, timeData);
+      }
+      
+      // Load the saved timestamp from CacheStorage
+      async function loadSavedTime() {
+        const cache = await caches.open(cacheName);
+        const match = await cache.match(`/timestamps/{{ video_name }}`);
+        if (match) {
+          const data = await match.json();
+          video.currentTime = data.time || 0;
+        }
+      }
+      
+      // Load saved time on initialization
+      video.addEventListener("loadedmetadata", loadSavedTime);
+      
+      // Save time regularly during playback
+      video.addEventListener("timeupdate", saveCurrentTime);
 
 
       const defaultOptions = {
@@ -540,6 +565,32 @@
         }, 300);
       }, duration);
     }
+
+    let lastTapTime = 0;
+    video.addEventListener("touchend", (event) => {
+      const currentTime = new Date().getTime();
+      const tapGap = currentTime - lastTapTime;
+    
+      // Detect double tap within a 300ms interval
+      if (tapGap < 300 && tapGap > 0) {
+        const touchX = event.changedTouches[0].clientX;
+        if (touchX < window.innerWidth / 2) {
+          video.currentTime = Math.max(0, video.currentTime - 5); // Left tap: rewind 5 seconds
+        } else {
+          video.currentTime = Math.min(video.duration, video.currentTime + 5); // Right tap: forward 5 seconds
+        }
+      }
+    
+      lastTapTime = currentTime;
+    });
+    document.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowRight") {
+    video.currentTime = Math.min(video.duration, video.currentTime + 5);
+  } else if (event.key === "ArrowLeft") {
+    video.currentTime = Math.max(0, video.currentTime - 5);
+  }
+});
+
   </script>
 </body>
 </html>
