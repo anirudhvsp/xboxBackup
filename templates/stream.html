@@ -215,6 +215,22 @@
     .toast.show {
       opacity: 1;
     }
+
+    .plyr__controls__item.seek-button {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin: 0 5px;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .seek-button {
+      display: inline-block;
+    }
+  }
   </style>
 </head>
 
@@ -310,6 +326,28 @@ async function saveCurrentTime() {
       };
 
       let player, hls;
+
+function addSeekButtons() {
+      // Creating seek buttons
+      const backButton = document.createElement("button");
+      backButton.className = "plyr__controls__item seek-button";
+      backButton.innerHTML = "⏪";
+      backButton.title = "Back 5s";
+      backButton.onclick = () => video.currentTime = Math.max(0, video.currentTime - 5);
+
+      const forwardButton = document.createElement("button");
+      forwardButton.className = "plyr__controls__item seek-button";
+      forwardButton.innerHTML = "⏩";
+      forwardButton.title = "Forward 5s";
+      forwardButton.onclick = () => video.currentTime = Math.min(video.duration, video.currentTime + 5);
+
+      // Insert the buttons next to the play button
+      const controls = document.querySelector(".plyr__controls");
+      const playButton = controls.querySelector(".plyr__control--overlays .plyr__control--play");
+      controls.insertBefore(backButton, playButton);
+      controls.insertBefore(forwardButton, playButton.nextSibling);
+    }
+      
       const subtitleExists = await fetch(subtitleSource, { method: 'HEAD' }).then(
                 (response) => response.ok
       );
@@ -328,7 +366,7 @@ async function saveCurrentTime() {
             defaultOptions.quality.options = ["auto", ...availableQualities];
             defaultOptions.quality.default = "auto"; // Set default to auto
             player = new Plyr(video, defaultOptions);
-
+            addSeekButtons();
              if (subtitleExists) {
                 const track = document.createElement('track');
                 track.kind = 'subtitles';
@@ -346,6 +384,7 @@ async function saveCurrentTime() {
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = source;
           player = new Plyr(video, defaultOptions);
+          addSeekButtons();
           if (subtitleExists) {
               const track = document.createElement('track');
               track.kind = 'subtitles';
