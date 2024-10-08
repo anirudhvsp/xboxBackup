@@ -344,8 +344,19 @@ function addSeekButtons() {
       // Insert the buttons next to the play button
       const controls = document.querySelector(".plyr__controls");
       const playButton = controls.querySelector(".plyr__control--overlays .plyr__control--play");
-      controls.insertBefore(backButton, playButton);
-      controls.insertBefore(forwardButton, playButton.nextSibling);
+      if (playButton) {
+        // Check if nextSibling exists
+        if (playButton.nextSibling) {
+          controls.insertBefore(backButton, playButton);
+          controls.insertBefore(forwardButton, playButton.nextSibling);
+        } else {
+          // If nextSibling doesn't exist, append forwardButton to the end
+          controls.insertBefore(backButton, playButton);
+          controls.appendChild(forwardButton);
+        }
+      } else {
+        console.error("Play button not found");
+      }
     }
       
       const subtitleExists = await fetch(subtitleSource, { method: 'HEAD' }).then(
