@@ -361,7 +361,6 @@ function addSeekButtons() {
           console.log("HLS is supported.");
           hls = new Hls();
           hls.loadSource(source);
-          addSeekButtons();
           hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
             const availableQualities = hls.levels.map((l) => l.height);
             defaultOptions.quality.options = ["auto", ...availableQualities];
