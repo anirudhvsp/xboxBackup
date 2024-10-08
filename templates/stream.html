@@ -361,12 +361,12 @@ function addSeekButtons() {
           console.log("HLS is supported.");
           hls = new Hls();
           hls.loadSource(source);
+          addSeekButtons();
           hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
             const availableQualities = hls.levels.map((l) => l.height);
             defaultOptions.quality.options = ["auto", ...availableQualities];
             defaultOptions.quality.default = "auto"; // Set default to auto
             player = new Plyr(video, defaultOptions);
-            addSeekButtons();
              if (subtitleExists) {
                 const track = document.createElement('track');
                 track.kind = 'subtitles';
@@ -384,7 +384,6 @@ function addSeekButtons() {
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = source;
           player = new Plyr(video, defaultOptions);
-          addSeekButtons();
           if (subtitleExists) {
               const track = document.createElement('track');
               track.kind = 'subtitles';
