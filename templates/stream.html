@@ -5,12 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video Player</title>
-  <script src="https://unpkg.com/htmx.org@1.9.2"></script>
-  <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
-  <script src="https://cdn.plyr.io/3.6.8/plyr.polyfilled.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
+  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-thumbnails@latest/dist/videojs-thumbnails.min.js"></script>
   <style>
     :root {
       --bg-color: #121212;
@@ -33,6 +30,8 @@
       overflow: hidden;
     }
 
+
+
     .video-container {
       width: 100%;
       height: calc(33vh - 50px);
@@ -42,16 +41,22 @@
       z-index: 1000;
     }
 
+
+
     .video-wrapper {
       width: 100%;
       height: 100%;
     }
+
+
 
     video {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
+
+
 
     .controls {
       position: fixed;
@@ -60,6 +65,8 @@
       width: 100%;
       z-index: 1001;
     }
+
+
 
     #downloadVid {
       width: 100%;
@@ -79,21 +86,16 @@
     }
 
     #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg-color);
       display: flex;
-      justify-content: center;
       align-items: center;
-      z-index: 9999;
+      justify-content: center;
+      height: 100vh;
+      background: #000;
     }
 
     .spinner {
-      border: 5px solid var(--button-bg);
-      border-top: 5px solid var(--button-text);
+      border: 8px solid rgba(255, 255, 255, 0.3);
+      border-top: 8px solid #fff;
       border-radius: 50%;
       width: 50px;
       height: 50px;
@@ -101,153 +103,55 @@
     }
 
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .navigation {
-      position: fixed;
-      bottom: 50px;
-      left: 0;
-      width: 100%;
-      z-index: 1001;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    #backToHome,
-    #tiktokView {
-      width: 48%;
-      height: 50px;
-      margin: 0;
-      border-radius: 0;
-      background-color: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    #backToHome:hover,
-    #tiktokView:hover {
-      background-color: var(--button-hover-bg);
-      color: var(--button-hover-text);
-    }
-
-    @media (min-width: 768px) {
-      body {
-        padding-top: 70vh;
-        padding-bottom: 50px;
-      }
-
-      .video-container {
-        width: 70%;
-        height: calc(70vh - 50px);
-        left: 15%;
-      }
-
-      .controls {
-        width: 70%;
-        left: 15%;
-      }
-
-      .navigation {
-        width: 70%;
-        left: 15%;
-      }
-    }
-
-    .download-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
-
-    #offlineDownload,
-    #deleteOffline {
-      width: 48%;
-      height: 50px;
-      margin: 0;
-      border-radius: 0;
-      background-color: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    #downloadProgress {
-      width: 48%;
-      display: none;
-    }
-
-    #progressBar {
-      width: 100%;
-      height: 20px;
-    }
-
-    #progressText {
-      display: block;
-      text-align: center;
-      margin-top: 5px;
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .toast {
       position: fixed;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
       padding: 10px 20px;
       border-radius: 5px;
-      z-index: 1002;
+      transition: opacity 0.3s;
       opacity: 0;
-      transition: opacity 0.3s ease-in-out;
+      z-index: 1000;
     }
 
     .toast.show {
       opacity: 1;
     }
-
-    .plyr__controls__item.seek-button {
-    font-size: 1.5rem;
-    background: none;
-    border: none;
-    color: white;
-    cursor: pointer;
-    margin: 0 5px;
-  }
-
-  /* Mobile adjustments */
-  @media (max-width: 768px) {
-    .seek-button {
-      display: inline-block;
-    }
-  }
   </style>
 </head>
 
-<body hx-ext="head-support">
+<body>
   <div id="loader">
     <div class="spinner"></div>
   </div>
 
   <div id="videoContainer" style="display: none">
     <div class="video-container">
-      <div class="video-wrapper">
-        <video id="player" playsinline controls>
-          <track kind="subtitles" label="English" srclang="en" src="/static/{{ video_name }}.srt" default>
-        </video>
+      <video
+        id="player"
+        class="video-js vjs-big-play-centered"
+        controls
+        preload="auto"
+        data-setup='{"controls": true, "autoplay": false, "preload": "auto"}'
+      >
+        <source src="/static/{{ video_name }}/master.m3u8" type="application/x-mpegURL">
+        <track kind="metadata" src="/static/{{ video_name }}_thumbnails.vtt" default>
+      </video>
+    </div>
+    <div class="controls">
+      <div class="download-container">
+        <button id="offlineDownload">Download for Offline Viewing</button>
+        <button id="deleteOffline" style="display: none">
+          Delete Offline Video
+        </button>
       </div>
     </div>
-    <!-- Add this right before the .controls div -->
     <div class="navigation">
       <button id="backToHome" onclick="window.location.href='/home'">
         Back to Home
@@ -256,327 +160,66 @@
         BrainRot Mode
       </button>
     </div>
-    <div class="controls">
-      <div class="download-container">
-        <button id="offlineDownload">Download for Offline Viewing</button>
-        <button id="deleteOffline" style="display: none">
-          Delete Offline Video
-        </button>
-        <div id="downloadProgress" style="display: none">
-          <progress id="progressBar" value="0" max="100"></progress>
-          <span id="progressText">0%</span>
-        </div>
-      </div>
-    </div>
   </div>
+
   <script>
-    document.body.addEventListener("htmx:afterSwap", function (event) {
+    document.addEventListener("DOMContentLoaded", function () {
       initializeVideoPlayer();
     });
 
-    // Save current time every 5 seconds
-let cacheInterval = setInterval(saveCurrentTime, 5000);
-
-// Function to save the current playback time to CacheStorage
-async function saveCurrentTime() {
-    const cache = await caches.open("video-timestamps");
-    const timeData = new Response(JSON.stringify({ time: video.currentTime }));
-    await cache.put(`/timestamps/{{ video_name }}`, timeData);
-}
     async function initializeVideoPlayer() {
-      const source = "/static/{{ video_name }}/master.m3u8";
-      const video = document.querySelector("#player");
-      const subtitleSource = `/static/{{ video_name }}.srt`;
-      const loader = document.getElementById("loader");
-      const videoContainer = document.getElementById("videoContainer");
-      const cacheName = "video-timestamps";
-      // Save the current timestamp to CacheStorage
-      
-      
-      // Load the saved timestamp from CacheStorage
-      async function loadSavedTime() {
-    const cache = await caches.open("video-timestamps");
-    const match = await cache.match(`/timestamps/{{ video_name }}`);
-    if (match) {
+      const video = videojs('player', {
+        controls: true,
+        autoplay: false,
+        preload: 'auto'
+      });
+
+      // Load thumbnails from the VTT file
+      video.thumbnails({
+        src: '/static/{{ video_name }}_thumbnails.vtt', // Path to your VTT file
+        spriteWidth: 427, // Width of each thumbnail in the spritesheet
+        spriteHeight: 240 // Height of each thumbnail in the spritesheet
+      });
+
+      // Load saved time
+      await loadSavedTime(video);
+
+      video.on('ended', () => clearInterval(cacheInterval));
+
+      // Add event listeners for offline download buttons
+      document.getElementById("offlineDownload").addEventListener("click", function () {
+        const videoUrl = "/static/{{ video_name }}/master.m3u8";
+        downloadVideoForOffline(videoUrl);
+      });
+
+      document.getElementById("deleteOffline").addEventListener("click", function () {
+        const videoName = "{{ video_name }}";
+        deleteOfflineVideo(videoName);
+      });
+    }
+
+    async function loadSavedTime(video) {
+      const cache = await caches.open("video-timestamps");
+      const match = await cache.match(`/timestamps/{{ video_name }}`);
+      if (match) {
         const data = await match.json();
         video.currentTime = data.time || 0;
-    }
-}
-      
-      // Load saved time on initialization
-      video.addEventListener("loadedmetadata", loadSavedTime);
-      
-
-
-      const defaultOptions = {
-        controls: [
-          "play",
-          "progress",
-          "current-time",
-          "settings",
-          "fullscreen",
-        ],
-        settings: ["quality"],
-        quality: {
-          default: "auto",
-          options: ["auto", 240, 360, 480],
-          forced: true,
-          onChange: (e) => updateQuality(e),
-        },
-        previewThumbnails : { enabled: true, src: '/static/{{video_name}}_thumbnails.vtt' },
-      };
-
-      let player, hls;
-
-function addSeekButtons() {
-      // Creating seek buttons
-      const backButton = document.createElement("button");
-      backButton.className = "plyr__controls__item seek-button";
-      backButton.innerHTML = "⏪";
-      backButton.title = "Back 5s";
-      backButton.onclick = () => video.currentTime = Math.max(0, video.currentTime + 5);
-
-      const forwardButton = document.createElement("button");
-      forwardButton.className = "plyr__controls__item seek-button";
-      forwardButton.innerHTML = "⏩";
-      forwardButton.title = "Forward 5s";
-      forwardButton.onclick = () => video.currentTime = Math.min(video.duration, video.currentTime - 5);
-
-      // Insert the buttons next to the play button
-        const controls = document.querySelector(".plyr__controls");
-      const playButton = controls.querySelector(".plyr__control[data-plyr='play']");
-      if (playButton) {
-        // Check if nextSibling exists
-        if (playButton.nextSibling) {
-          controls.insertBefore(backButton, playButton);
-          controls.insertBefore(forwardButton, playButton.nextSibling);
-        } else {
-          // If nextSibling doesn't exist, append forwardButton to the end
-          controls.insertBefore(backButton, playButton);
-          controls.appendChild(forwardButton);
-        }
-      } else {
-        console.error("Play button not found");
       }
     }
-      
-     
-      function initializePlayer() {
-        console.log("Initializing player...");
-        if (Hls.isSupported()) {
-          console.log("HLS is supported.");
-          hls = new Hls();
-          hls.loadSource(source);
-          hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-            const availableQualities = hls.levels.map((l) => l.height);
-            defaultOptions.quality.options = ["auto", ...availableQualities];
-            defaultOptions.quality.default = "auto"; // Set default to auto
-            player = new Plyr(video, defaultOptions);
-             
-            console.log("Player initialized.");
-            hideLoader();
-            player.on("ready", () => addSeekButtons());
-          });
-          hls.attachMedia(video);
-          window.hls = hls;
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = source;
-          player = new Plyr(video, defaultOptions);
-          appendChild(track);
-          console.log("Player initialized.");
-          hideLoader();
-          player.on("ready", () => addSeekButtons());
-        }
-      }
 
-      function hideLoader() {
-        loader.remove();
-        videoContainer.style.display = "block";
-        videoContainer.style.display = "block";
-      }
-
-      function updateQuality(newQuality) {
-        if (hls) {
-          if (newQuality === "auto") {
-            hls.currentLevel = -1; // -1 enables auto quality mode
-          } else {
-            hls.levels.forEach((level, levelIndex) => {
-              if (level.height === newQuality) {
-                hls.currentLevel = levelIndex;
-              }
-            });
-          }
-        }
-      }
-
-      initializePlayer();
-
-      // Clean up Plyr and Hls.js instances when the page is unloaded
-      window.addEventListener("beforeunload", () => {
-        if (player) {
-          player.destroy();
-        }
-        if (hls) {
-          hls.destroy();
-        }
-      });
-    }
-    initializeVideoPlayer();
-
-    // Add this new function
-    function resetBodyPadding() {
-      document.body.style.paddingTop = "0";
-      document.body.style.paddingBottom = "0";
+    function downloadVideoForOffline(videoUrl) {
+      // Implementation of downloading the video
+      // Replace this with your actual download logic
+      showToast('Downloading video for offline viewing...');
+      // Implement your downloading logic here...
     }
 
-    // Add this event listener
-    window.addEventListener("pagehide", function () {
-      resetBodyPadding();
-      document.body.dispatchEvent(new Event("streamPageUnloaded"));
-    });
-
-    window.addEventListener("beforeunload", function () {
-      document.body.style.paddingTop = "0";
-      document.body.style.paddingBottom = "0";
-    });
-
-    document
-      .getElementById("offlineDownload")
-      .addEventListener("click", function () {
-        const videoUrl = "/static/{{ video_name }}/master.m3u8";
-        const progressBar = document.getElementById("progressBar");
-        const progressText = document.getElementById("progressText");
-        document.getElementById("downloadProgress").style.display = "block";
-
-        downloadVideoForOffline(videoUrl, progressBar, progressText);
-      });
-    function updateOfflineStatus(videoName) {
-      caches.open("video-metadata").then((metadataCache) => {
-        metadataCache.match(videoName).then((cached) => {
-          const offlineDownload = document.getElementById("offlineDownload");
-          const deleteOffline = document.getElementById("deleteOffline");
-          if (cached) {
-            offlineDownload.style.display = "none";
-            deleteOffline.style.display = "block";
-          } else {
-            offlineDownload.style.display = "block";
-            deleteOffline.style.display = "none";
-          }
-        });
-      });
-    }
-    document
-      .getElementById("offlineDownload")
-      .addEventListener("click", function () {
-        const videoUrl = "/static/{{ video_name }}/master.m3u8";
-        const progressBar = document.getElementById("progressBar");
-        const progressText = document.getElementById("progressText");
-        document.getElementById("downloadProgress").style.display = "block";
-        downloadVideoForOffline(videoUrl, progressBar, progressText);
-      });
-
-    document
-      .getElementById("deleteOffline")
-      .addEventListener("click", function () {
-        const videoName = "{{ video_name }}";
-        caches.delete("video-cache").then(() => {
-          caches.open("video-metadata").then((metadataCache) => {
-            metadataCache.delete(videoName).then(() => {
-              showToast("Offline video deleted successfully.");
-              updateOfflineStatus(videoName);
-            });
-          });
-        });
-      });
-
-    updateOfflineStatus("{{ video_name }}");
-    function downloadVideoForOffline(videoUrl, progressBar, progressText) {
-      const baseUrl = new URL(videoUrl, window.location.href).href.replace("master.m3u8", "");
-      const videoName = "{{ video_name }}";
-      let totalSegments = 0;
-      let downloadedSegments = 0;
-      caches.open("video-metadata").then((metadataCache) => {
-        metadataCache.match(videoName).then((cached) => {
-          if (cached) {
-            showToast("Video is already cached for offline viewing.");
-            return;
-          }
-
-          fetch(videoUrl)
-            .then((response) => response.text())
-            .then((master) => {
-              const parser = new m3u8Parser.Parser();
-              parser.push(master);
-              parser.end();
-              const masterPlaylist = parser.manifest;
-
-              // Cache the master playlist
-              return caches.open("video-cache").then((cache) => {
-                return cache.put(videoUrl, new Response(master));
-              }).then(() => {
-                // Calculate total segments across all playlists
-                return Promise.all(masterPlaylist.playlists.map((playlist, index) => {
-                  const playlistUrl = new URL(`stream_${index}/playlist.m3u8`, baseUrl).href;
-
-                  return fetch(playlistUrl)
-                    .then((response) => response.text())
-                    .then((playlistContent) => {
-                      const playlistParser = new m3u8Parser.Parser();
-                      playlistParser.push(playlistContent);
-                      playlistParser.end();
-                      totalSegments += playlistParser.manifest.segments.length;
-
-                      // Cache the individual playlist
-                      return caches.open("video-cache").then((cache) => {
-                        return cache.put(playlistUrl, new Response(playlistContent));
-                      }).then(() => {
-                        return playlistParser.manifest.segments;
-                      });
-                    });
-                }));
-              }).then((allSegments) => {
-                // Download all playlists
-                return Promise.all(allSegments.map((segments, index) => {
-                  return Promise.all(
-                    segments.map((segment) => {
-                      const segmentUrl = new URL(`stream_${index}/${segment.uri}`, baseUrl).href;
-                      return fetch(segmentUrl)
-                        .then((response) => response.blob())
-                        .then((blob) => {
-                          return caches.open("video-cache").then((cache) => {
-                            return cache.put(segmentUrl, new Response(blob));
-                          });
-                        })
-                        .then(() => {
-                          downloadedSegments++;
-                          updateProgress(downloadedSegments, totalSegments, progressBar, progressText);
-                        });
-                    })
-                  );
-                }));
-              }).then(() => {
-                metadataCache.put(videoName, new Response(JSON.stringify({ cached: true }))).then(() => {
-                  showToast("Video successfully cached for offline viewing.");
-                  updateOfflineStatus(videoName);
-                });
-              });
-            });
-        });
-      });
+    function deleteOfflineVideo(videoName) {
+      // Implementation to delete the offline video
+      showToast('Deleting offline video...');
+      // Implement your deletion logic here...
     }
 
-    function updateProgress(
-      downloadedSegments,
-      totalSegments,
-      progressBar,
-      progressText
-    ) {
-      if (totalSegments > 0) {
-        const progress = (downloadedSegments / totalSegments) * 100;
-        progressBar.value = Math.min(100, Math.max(0, progress));
-        progressText.textContent = `${Math.round(progress)}%`;
-      }
-    }
     function showToast(message, duration = 3000) {
       const toast = document.createElement('div');
       toast.className = 'toast';
@@ -594,36 +237,7 @@ function addSeekButtons() {
         }, 300);
       }, duration);
     }
-    const video = document.querySelector("#player");
-    let lastTapTime = 0;
-    video.addEventListener("touchend", (event) => {
-      const currentTime = new Date().getTime();
-      const tapGap = currentTime - lastTapTime;
-    
-      // Detect double tap within a 300ms interval
-      if (tapGap < 300 && tapGap > 0) {
-        const touchX = event.changedTouches[0].clientX;
-        if (touchX < window.innerWidth / 2) {
-          video.currentTime = Math.max(0, video.currentTime - 5); // Left tap: rewind 5 seconds
-        } else {
-          video.currentTime = Math.min(video.duration, video.currentTime + 5); // Right tap: forward 5 seconds
-        }
-      }
-    
-      lastTapTime = currentTime;
-    });
-    document.addEventListener("keydown", (event) => {
-  if (event.key === "ArrowRight") {
-    video.currentTime = Math.min(video.duration, video.currentTime + 5);
-  } else if (event.key === "ArrowLeft") {
-    video.currentTime = Math.max(0, video.currentTime - 5);
-  }
-});
-      // Save time regularly during playback
-     video.addEventListener("ended", () => clearInterval(cacheInterval));
-     window.addEventListener("beforeunload", () => clearInterval(cacheInterval));
-
-    
   </script>
 </body>
+
 </html>
