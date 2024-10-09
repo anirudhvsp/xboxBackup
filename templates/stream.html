@@ -66,8 +66,6 @@
       z-index: 1001;
     }
 
-
-
     #downloadVid {
       width: 100%;
       height: 50px;
@@ -174,12 +172,16 @@
         preload: 'auto'
       });
 
-      // Load thumbnails from the VTT file
-      video.thumbnails({
-        src: '/static/{{ video_name }}_thumbnails.vtt', // Path to your VTT file
-        spriteWidth: 427, // Width of each thumbnail in the spritesheet
-        spriteHeight: 240 // Height of each thumbnail in the spritesheet
-      });
+      // Ensure the thumbnails plugin is loaded
+      if (video.thumbnails) {
+        video.thumbnails({
+          src: '/static/{{ video_name }}_thumbnails.vtt', // Path to your VTT file
+          spriteWidth: 427, // Width of each thumbnail in the spritesheet
+          spriteHeight: 240 // Height of each thumbnail in the spritesheet
+        });
+      } else {
+        console.error('VideoJS Thumbnails plugin is not loaded.');
+      }
 
       // Load saved time
       await loadSavedTime(video);
