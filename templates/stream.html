@@ -360,13 +360,7 @@ function addSeekButtons() {
       }
     }
       
-      const subtitleExists = await fetch(subtitleSource, { method: 'HEAD' }).then(
-                (response) => response.ok
-      );
-
-       if (subtitleExists) {
-            defaultOptions.controls.push('captions');
-        }
+     
       function initializePlayer() {
         console.log("Initializing player...");
         if (Hls.isSupported()) {
@@ -378,15 +372,7 @@ function addSeekButtons() {
             defaultOptions.quality.options = ["auto", ...availableQualities];
             defaultOptions.quality.default = "auto"; // Set default to auto
             player = new Plyr(video, defaultOptions);
-             if (subtitleExists) {
-                const track = document.createElement('track');
-                track.kind = 'subtitles';
-                track.label = 'English';
-                track.srclang = 'en';
-                track.src = subtitleSource;
-                track.default = true;
-                video.appendChild(track);
-            }
+             
             console.log("Player initialized.");
             hideLoader();
             player.on("ready", () => addSeekButtons());
@@ -396,14 +382,7 @@ function addSeekButtons() {
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = source;
           player = new Plyr(video, defaultOptions);
-          if (subtitleExists) {
-              const track = document.createElement('track');
-              track.kind = 'subtitles';
-              track.label = 'English';
-              track.srclang = 'en';
-              track.src = subtitleSource;
-              track.default = true;
-              video.appendChild(track);
+          ppendChild(track);
           }
           console.log("Player initialized.");
           hideLoader();
