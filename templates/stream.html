@@ -325,6 +325,7 @@ async function saveCurrentTime() {
           forced: true,
           onChange: (e) => updateQuality(e),
         },
+        previewThumbnails : { enabled: true, src: '/static/{{video_name}}_thumbnails.vtt' },
       };
 
       let player, hls;
