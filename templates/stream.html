@@ -378,7 +378,8 @@ function addSeekButtons() {
             player.on("ready", () => addSeekButtons());
             console.log(player);
           });
-          hls.attachMedia(video);
+          hls.attachMedia(video.captions);
+          hls.attachMedia(video.previewThumbnails);
           window.hls = hls;
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = source;
@@ -386,9 +387,7 @@ function addSeekButtons() {
           appendChild(track);
           console.log("Player initialized.");
           hideLoader();
-          player.on("ready", () => addSeekButtons());
-          console.log(player.settings);
-          
+          player.on("ready", () => addSeekButtons());          
         }
       }
 
