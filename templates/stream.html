@@ -376,6 +376,8 @@ function addSeekButtons() {
             console.log("Player initialized.");
             hideLoader();
             player.on("ready", () => addSeekButtons());
+            player.captions.ative = true;
+            player.previewThumbnails.enabled = true;
             console.log(player.captions);
             console.log(player.previewThumbnails);
           });
