@@ -334,13 +334,13 @@ function addSeekButtons() {
       backButton.className = "plyr__controls__item seek-button";
       backButton.innerHTML = "⏪";
       backButton.title = "Back 5s";
-      backButton.onclick = () => video.currentTime = Math.max(0, video.currentTime - 5);
+      backButton.onclick = () => video.currentTime = Math.max(0, video.currentTime + 5);
 
       const forwardButton = document.createElement("button");
       forwardButton.className = "plyr__controls__item seek-button";
       forwardButton.innerHTML = "⏩";
       forwardButton.title = "Forward 5s";
-      forwardButton.onclick = () => video.currentTime = Math.min(video.duration, video.currentTime + 5);
+      forwardButton.onclick = () => video.currentTime = Math.min(video.duration, video.currentTime - 5);
 
       // Insert the buttons next to the play button
         const controls = document.querySelector(".plyr__controls");
