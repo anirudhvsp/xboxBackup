@@ -376,10 +376,10 @@ function addSeekButtons() {
             console.log("Player initialized.");
             hideLoader();
             player.on("ready", () => addSeekButtons());
-            console.log(player);
+            console.log(player.captions);
+            console.log(player.previewThumbnails);
           });
-          hls.attachMedia(video.captions);
-          hls.attachMedia(video.previewThumbnails);
+          hls.attachMedia(video);
           window.hls = hls;
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = source;
