@@ -1,5 +1,5 @@
 {% if media %}
-<div class="grid gap-2 p-2 media-grid-page">
+<div class="grid grid-cols-2 gap-2 p-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
     {% for item in media %}
     <div class="media-tile relative overflow-hidden aspect-square rounded-lg shadow-md transition-transform duration-300 ease-in-out ghost-loading"
         data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}"
