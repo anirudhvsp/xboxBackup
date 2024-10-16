@@ -1,263 +1,100 @@
 {% if media %}
-<div class="media-grid-page">
+<div class="grid gap-2 p-2 media-grid-page">
     {% for item in media %}
-    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}"
-        data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }}" {% if
-        item.type=='stream' %} hx-get="/stream/{{ item.name }}" hx-target="body" hx-push-url="true" {% endif %}>
+    <div class="media-tile relative overflow-hidden aspect-square rounded-lg shadow-md transition-transform duration-300 ease-in-out ghost-loading"
+        data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}"
+        data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }}"
+        {% if item.type == 'stream' %} hx-get="/stream/{{ item.name }}" hx-target="body" hx-push-url="true" {% endif %}>
+        
         <div class="image-container">
-            <div class="ghost-image"></div>
+            <div class="ghost-image h-40 bg-gray-300 rounded-lg transition-opacity duration-300 ease-in-out"></div>
         </div>
-        <div class="title-overlay">
-            <p class="title-text">{{ item.name }}</p>
+        <div class="title-overlay absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent text-white opacity-0 transition-opacity duration-300 ease-in-out">
+            <p class="title-text text-center text-sm">{{ item.name }}</p>
         </div>
         {% if item.type == 'stream' %}
-        <div class="duration-indicator">{{ item.duration }}</div>
+        <div class="duration-indicator absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-md transition-opacity duration-300 ease-in-out">{{ item.duration }}</div>
         {% endif %}
-        <div class="cached-icon" style="display: none;"></div>
+        <div class="cached-icon hidden absolute top-1 left-1 w-6 h-6 bg-center bg-no-repeat z-10"></div>
     </div>
     {% endfor %}
 </div>
-{% if page < total_pages %} <div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once"
-    hx-swap="outerHTML">
-    </div>
-    {% endif %}
-    {% endif %}
 
-    <script>
-        async function checkCachedVideos() {
-            const cacheStorage = await caches.open("video-metadata");
-            const cachedResponse = await cacheStorage.keys();
+{% if page < total_pages %}
+<div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once" hx-swap="outerHTML"></div>
+{% endif %}
+{% endif %}
 
-            // Extracting video IDs from cached responses
-            const cachedVideoIds = cachedResponse.map(request => request.url.split('/').pop()); // Adjust based on your URL structure
-            const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
-            const cachedVideoNames = cachedVideos.map(video => video.name);
+<script>
+    async function checkCachedVideos() {
+        const cacheStorage = await caches.open("video-metadata");
+        const cachedResponse = await cacheStorage.keys();
 
-            const tiles = document.querySelectorAll('.media-tile');
-            tiles.forEach(tile => {
-                const name = tile.dataset.name;
-                if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
-                    const cachedIcon = tile.querySelector('.cached-icon');
-                    cachedIcon.style.display = 'block';
-                    cachedIcon.style.backgroundImage = 'url("/static/icon-check-small.png")';
-                }
-            });
-        }
+        const cachedVideoIds = cachedResponse.map(request => request.url.split('/').pop());
+        const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
+        const cachedVideoNames = cachedVideos.map(video => video.name);
 
-        function loadActualContent() {
-            const tiles = document.querySelectorAll('.media-tile.ghost-loading');
-            tiles.forEach(tile => {
-                const name = tile.dataset.name;
-                const thumbnail = tile.dataset.thumbnail;
-                const type = tile.dataset.type;
-                const duration = tile.dataset.duration;
-
-                tile.innerHTML = `
-            <div class="image-container">
-                <img preload class="lazy-load" data-src="${thumbnail}" alt="${name}">
-            </div>
-            <div class="title-overlay">
-                <p class="title-text">${name}</p>
-            </div>
-            ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
-            <div class="cached-icon" style="display: none;"></div>
-        `;
-
-                tile.classList.remove('ghost-loading');
-                tile.classList.add('loading');
-            });
-            lazyLoadImages();
-        }
-
-        function lazyLoadImages() {
-            const images = document.querySelectorAll('.media-tile.loading img.lazy-load');
-            images.forEach(img => {
-                if (img.dataset.src) {
-                    img.onload = function () {
-                        this.style.opacity = 1;
-                        this.closest('.media-tile').classList.remove('loading');
-                        this.closest('.media-tile').classList.add('loaded');
-                    };
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadActualContent();
-            checkCachedVideos();
+        const tiles = document.querySelectorAll('.media-tile');
+        tiles.forEach(tile => {
+            const name = tile.dataset.name;
+            if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
+                const cachedIcon = tile.querySelector('.cached-icon');
+                cachedIcon.classList.remove('hidden');
+                cachedIcon.style.backgroundImage = 'url("/static/icon-check-small.png")';
+            }
         });
-        document.addEventListener('htmx:load', () => {
-            loadActualContent();
-            checkCachedVideos();
+    }
+
+    function loadActualContent() {
+        const tiles = document.querySelectorAll('.media-tile.ghost-loading');
+        tiles.forEach(tile => {
+            const name = tile.dataset.name;
+            const thumbnail = tile.dataset.thumbnail;
+            const type = tile.dataset.type;
+            const duration = tile.dataset.duration;
+
+            tile.innerHTML = `
+                <div class="image-container">
+                    <img preload class="lazy-load w-full h-full object-cover rounded-lg" data-src="${thumbnail}" alt="${name}">
+                </div>
+                <div class="title-overlay">
+                    <p class="title-text">${name}</p>
+                </div>
+                ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
+                <div class="cached-icon hidden"></div>
+            `;
+
+            tile.classList.remove('ghost-loading');
+            tile.classList.add('loading');
         });
-        document.addEventListener('htmx:afterSwap', () => {
-            loadActualContent();
-            checkCachedVideos();
+        lazyLoadImages();
+    }
+
+    function lazyLoadImages() {
+        const images = document.querySelectorAll('.media-tile.loading img.lazy-load');
+        images.forEach(img => {
+            if (img.dataset.src) {
+                img.onload = function () {
+                    this.style.opacity = 1;
+                    this.closest('.media-tile').classList.remove('loading');
+                    this.closest('.media-tile').classList.add('loaded');
+                };
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            }
         });
-    </script>
-    <style>
-        .media-tile[data-type="image"] {
-            cursor: pointer;
-        }
+    }
 
-        .media-grid-page {
-            display: grid;
-            gap: 8px;
-            padding: 8px;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        }
-
-        @media screen and (min-width: 768px) {
-            .media-grid-page {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            }
-        }
-
-        @media screen and (min-width: 1024px) {
-            .media-grid-page {
-                grid-template-columns: repeat(8, 1fr);
-            }
-        }
-
-        @media screen and (min-width: 1280px) and (max-width: 1439px) {
-
-            .media-grid,
-            .media-grid-page {
-                grid-template-columns: repeat(8, 1fr);
-            }
-        }
-
-        @media screen and (min-width: 1440px) {
-            .media-grid-page {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            }
-        }
-
-
-        .media-tile {
-            aspect-ratio: 1 / 1;
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .duration-indicator {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.8em;
-            transition: opacity 0.3s ease;
-        }
-
-        .media-tile:hover {
-            transform: scale(1.05);
-        }
-
-        .media-tile img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-
-        .media-tile:hover .duration-indicator {
-            opacity: 0;
-        }
-
-        .media-tile .title-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-            color: white;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .media-tile:hover .title-overlay {
-            opacity: 1;
-        }
-
-        .media-tile .title-text {
-            margin: 0;
-            font-size: 0.9em;
-            text-align: center;
-        }
-
-        .ghost-image {
-            height: 180px;
-            /* Increased height for ghost image */
-            background-color: var(--tile-bg);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            border-radius: 8px;
-            /* Rounded corners for images */
-        }
-
-        .media-tile img.loaded {
-            opacity: 1;
-            /* Fade in effect for loaded images */
-        }
-
-        @keyframes loading {
-            0% {
-                transform: translateX(-100%);
-            }
-
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        .ghost-loading {
-            opacity: 0.7;
-            /* Slightly transparent for loading state */
-        }
-
-        .ghost-image {
-            width: 100%;
-            /* Full width for ghost image */
-            height: 150px;
-            /* Fixed height for ghost image */
-            background-color: var(--tile-bg);
-            border-radius: 8px;
-            /* Rounded corners for ghost image */
-        }
-
-        .ghost-text {
-            height: 1em;
-            /* Height for ghost text */
-            width: 80%;
-            /* Width for ghost text */
-            margin: 10px auto;
-            /* Center align */
-            background-color: var(--tile-bg);
-            border-radius: 4px;
-            /* Rounded corners for ghost text */
-        }
-
-        .cached-icon {
-            display: none;
-            /* Initially hidden */
-            width: 24px;
-            height: 24px;
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            z-index: 10;
-            /* Above other elements */
-        }
-    </style>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadActualContent();
+        checkCachedVideos();
+    });
+    document.addEventListener('htmx:load', () => {
+        loadActualContent();
+        checkCachedVideos();
+    });
+    document.addEventListener('htmx:afterSwap', () => {
+        loadActualContent();
+        checkCachedVideos();
+    });
+</script>
