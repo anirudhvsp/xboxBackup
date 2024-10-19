@@ -1,27 +1,27 @@
 {% if media %}
-<div class="grid gap-2 p-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-auto xl:grid-cols-min-[160px]">
+<div class="media-grid-page">
     {% for item in media %}
-    <div class="media-tile ghost-loading aspect-square relative overflow-hidden rounded-lg shadow-md transition-transform duration-300 ease-in-out hover:scale-105" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}"
+    <div class="media-tile ghost-loading" data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}"
         data-type="{{ item.type }}" data-duration="{{ item.duration if item.type == 'stream' else '' }}" {% if
         item.type=='stream' %} hx-get="/stream/{{ item.name }}" hx-target="body" hx-push-url="true" {% endif %}>
         <div class="image-container">
-            <div class="ghost-image bg-gray-200 opacity-0 transition-opacity duration-300 ease-in-out rounded-lg h-full"></div>
+            <div class="ghost-image"></div>
         </div>
-        <div class="title-overlay absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black to-transparent text-white opacity-0 transition-opacity duration-300 ease-in-out">
-            <p class="title-text m-0 text-sm text-center">{{ item.name }}</p>
+        <div class="title-overlay">
+            <p class="title-text">{{ item.name }}</p>
         </div>
         {% if item.type == 'stream' %}
-        <div class="duration-indicator absolute bottom-1 right-1 bg-black bg-opacity-70 text-white p-1 rounded text-xs transition-opacity duration-300 ease-in-out">{{ item.duration }}</div>
+        <div class="duration-indicator">{{ item.duration }}</div>
         {% endif %}
-        <div class="cached-icon hidden absolute top-1 left-1 w-6 h-6 bg-contain bg-no-repeat bg-center z-10"></div>
+        <div class="cached-icon" style="display: none;"></div>
     </div>
     {% endfor %}
 </div>
-{% if page < total_pages %}
-<div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once" hx-swap="outerHTML">
-</div>
-{% endif %}
-{% endif %}
+{% if page < total_pages %} <div class="trigger" hx-get="/media_page/{{ page + 1 }}" hx-trigger="intersect once"
+    hx-swap="outerHTML">
+    </div>
+    {% endif %}
+    {% endif %}
 
     <script>
         async function checkCachedVideos() {
