@@ -96,40 +96,17 @@
             });
         }
 
-        function handlePreloadedContent() {
-            document.body.addEventListener('htmx:afterOnLoad', function(event) {
-                if (event.detail.elt.classList.contains('media-tile')) {
-                    const preloadedContent = event.detail.xhr.response;
-                    localStorage.setItem('preloaded-' + event.detail.elt.dataset.name, preloadedContent);
-                }
-            });
-
-            document.body.addEventListener('htmx:beforeRequest', function(event) {
-                if (event.detail.elt.classList.contains('media-tile')) {
-                    const preloadedContent = localStorage.getItem('preloaded-' + event.detail.elt.dataset.name);
-                    if (preloadedContent) {
-                        event.preventDefault();
-                        document.body.innerHTML = preloadedContent;
-                        history.pushState(null, '', event.detail.path);
-                        localStorage.removeItem('preloaded-' + event.detail.elt.dataset.name);
-                    }
-                }
-            });
-        }
-
+       
         document.addEventListener('DOMContentLoaded', () => {
             loadActualContent();
             checkCachedVideos();
-            handlePreloadedContent();
         });
         document.addEventListener('htmx:load', () => {
             loadActualContent();
             checkCachedVideos();
-            handlePreloadedContent();
         });
         document.addEventListener('htmx:afterSwap', () => {
             loadActualContent();
             checkCachedVideos();
-            handlePreloadedContent();
         });
     </script>
