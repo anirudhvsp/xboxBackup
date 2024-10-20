@@ -125,9 +125,11 @@
         document.addEventListener('htmx:load', () => {
             loadActualContent();
             checkCachedVideos();
+            handlePreloadedContent();
         });
         document.addEventListener('htmx:afterSwap', () => {
             loadActualContent();
             checkCachedVideos();
+            handlePreloadedContent();
         });
     </script>
