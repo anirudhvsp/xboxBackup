@@ -12,6 +12,20 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
+  <style>
+        :root {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --button-bg: #333333;
+      --button-text: #ffffff;
+      --button-hover-bg: #444444;
+      --button-hover-text: #ffffff;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+  </style>
   <script>
     function subscribeToPushNotifications() {
       const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";

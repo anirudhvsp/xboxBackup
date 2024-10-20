@@ -1,7 +1,20 @@
 <head>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-
+<style>
+    :root {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --button-bg: #333333;
+  --button-text: #ffffff;
+  --button-hover-bg: #444444;
+  --button-hover-text: #ffffff;
+}
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+</style>
 {% if media %}
 <div
     class="grid gap-2 p-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-auto xl:grid-cols-min-[160px]">
