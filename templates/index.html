@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="/static/manifest.json" />
-  <meta name="theme-color" content="#121212" />
+  <meta name="theme-color" content="#000000" />
   <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
 
   <title>Xbox Media</title>
@@ -13,46 +13,114 @@
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.8.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
   <style>
-        :root {
-            --bg-color: #000000; /* Black background */
-            --text-color: #00FF00; /* Green text */
-            --button-bg: transparent; /* Transparent button background */
-            --button-text: #00FF00; /* Green button text */
-            --button-hover-bg: #00FF00; /* Green button hover background */
-            --button-hover-text: #000000; /* Black button hover text */
-            --border-color: #00FF00; /* Green border */
-            --link-color: #00FF00; /* Green link color */
-            --link-hover-color: #FFFFFF; /* White link hover color */
-        }
+    :root {
+        --bg-color: #000000; /* Black background */
+        --text-color: #00FF00; /* Green text */
+        --border-color: rgba(0, 255, 0, 0.25); /* Lighter border */
+        --title-bar-color: rgba(0, 255, 0, 0.7); /* Brighter title bar text */
+        --link-color: #00FF00; /* Green link color */
+        --link-hover-color: #FFFFFF; /* White link hover color */
+        --placeholder-bg: #1a1a1a; /* Dark background for placeholders */
+    }
     body {
       font-family: 'Courier New', Courier, monospace; /* Monospaced font */
       background-color: var(--bg-color);
       color: var(--text-color);
+      margin: 0;
+      padding: 0; /* Remove body padding */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    /* Style links within the footer */
-    footer a {
+    /* Terminal Window Structure */
+    .terminal-window {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        margin: 1rem; /* Add some margin around the window */
+        border-radius: 0.375rem; /* rounded-md */
+        overflow: hidden; /* Hide scrollbar until needed */
+        background-color: var(--bg-color); /* Ensure background is black */
+    }
+    .title-bar {
+        padding: 0.5rem 1rem; /* Adjusted padding */
+        display: flex;
+        align-items: center;
+        background-color: rgba(16, 16, 16, 0.8); /* Darker title bar */
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0; /* Prevent shrinking */
+    }
+    .title-bar-dots span {
+        display: inline-block;
+        height: 0.75rem; /* h-3 */
+        width: 0.75rem; /* w-3 */
+        border-radius: 9999px; /* rounded-full */
+        margin-right: 0.5rem; /* mr-2 */
+    }
+    .dot-red { background-color: #ef4444; }
+    .dot-yellow { background-color: #f59e0b; }
+    .dot-green { background-color: #22c55e; }
+
+    .title-bar-text {
+        color: var(--title-bar-color);
+        font-size: 0.875rem; /* text-sm */
+        margin-left: 1rem; /* Space after dots */
+        flex-grow: 1; /* Allow text to take space */
+    }
+    .nav-links {
+        margin-left: auto; /* Push nav links to the right */
+        font-size: 0.875rem;
+    }
+    .nav-links a {
         color: var(--link-color);
+        text-decoration: none;
+        margin-left: 1rem;
+    }
+    .nav-links a:hover {
+        color: var(--link-hover-color);
         text-decoration: underline;
     }
-    footer a:hover {
-        color: var(--link-hover-color);
-        text-decoration: none;
+
+    .terminal-content {
+        padding: 1.5rem; /* p-6 */
+        flex-grow: 1; /* Allow content to fill space */
+        overflow-y: auto; /* Enable scrolling for content */
     }
-    /* Style header */
-    header {
-        border-bottom: 1px solid var(--border-color);
+    .command-line {
+        font-size: 1rem; /* Slightly larger command text */
+        margin-bottom: 0.75rem; /* mb-3 */
+        line-height: 1.5;
     }
-    /* Style footer */
-    footer {
-        border-top: 1px solid var(--border-color);
+    .prompt {
+        color: var(--text-color);
+        opacity: 0.8; /* Slightly dimmer prompt */
+    }
+    .command {
+        color: var(--text-color);
+    }
+    .output-line {
+        font-size: 1rem;
+        margin-bottom: 1.5rem; /* mb-6 */
+        color: var(--text-color);
+    }
+    h1.page-title { /* Specific styling for the main title */
+        font-size: 1.875rem; /* text-3xl */
+        margin-bottom: 1rem;
+        color: var(--text-color);
     }
     /* Loading spinner */
     .loading-spinner {
         border-color: var(--border-color);
         border-top-color: var(--text-color);
     }
+    /* Ensure media container takes remaining space */
+    #media-container {
+        flex-grow: 1;
+    }
   </style>
   <script>
+    // Push notification script remains the same
     function subscribeToPushNotifications() {
       const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
       if ("serviceWorker" in navigator) {
@@ -74,50 +142,31 @@
             console.log("Push subscription object:", subscription);
             const subscriptionJson = JSON.stringify(subscription);
             console.log("Encoded push subscription (btoa):", btoa(subscriptionJson));
-
-            // Sending subscription to the server
             return fetch('/subscribe', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                push_token: btoa(subscriptionJson)
-              })
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ push_token: btoa(subscriptionJson) })
             });
           })
-          .then(response => {
-            console.log('Response from /subscribe endpoint:', response);
-            return response.json();
-          })
-          .then(data => {
-            console.log('Subscription successful:', data);
-          })
-          .catch((error) => {
-            console.error("Error during subscription:", error);
-          });
+          .then(response => response.json())
+          .then(data => console.log('Subscription successful:', data))
+          .catch((error) => console.error("Error during subscription:", error));
       } else {
         console.warn("Service Worker not supported in this browser.");
       }
     }
-
-    // Utility function to convert VAPID key from base64 URL string to Uint8Array
     function urlB64ToUint8Array(base64String) {
       const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-      const base64 = (base64String + padding)
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
       const rawData = window.atob(base64);
       return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
     }
-
-
-    // Ensure head element is available
     window.addEventListener("load", () => {
       navigator.serviceWorker.register('/static/service-worker3.js')
         .then((registration) => {
           console.log('ServiceWorker registered: ', registration.scope);
-          subscribeToPushNotifications(); // Call the subscription function here
+          subscribeToPushNotifications();
+          registration.update(); // Add update check
         })
         .catch((error) => console.log('ServiceWorker registration failed: ', error));
     });
@@ -130,68 +179,92 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 
-<body class="min-h-screen flex flex-col p-0" hx-ext="head-support">
-  <header class="p-4">
-    <h1 class="text-3xl font-bold">Xbox Media</h1>
-  </header>
-  <main class="flex-1 overflow-y-auto">
-    <section id="media-container" class="p-4">
-      <div id="media-content" hx-get="/media_page/1" hx-trigger="load" hx-swap="innerHTML">
-        <div class="flex flex-col items-center justify-center h-52">
-          <div class="loading-spinner w-10 h-10 border-4 border-gray-200 border-t-4 border-blue-600 rounded-full animate-spin"></div>
-          <p class="mt-2">Loading media...</p>
-        </div>
+<body hx-ext="head-support">
+  <div class="terminal-window">
+    <div class="title-bar">
+      <div class="title-bar-dots">
+        <span class="dot-red"></span>
+        <span class="dot-yellow"></span>
+        <span class="dot-green"></span>
       </div>
-    </section>
-  </main>
-  <footer class="p-4 text-center">
-    <p>
-      2024 Xbox Streaming App
-      <a class="text-blue-600 hover:underline" href="https://github.com/anirudhvsp">Github</a>
-    </p>
-  </footer>
-</body>
-<script>
-  document.body.addEventListener("htmx:beforeOnLoad", function (event) {
-    if (event.detail.xhr.getResponseHeader("X-Reset-Body-Padding")) {
-      document.body.style.paddingTop = "0";
-      document.body.style.paddingBottom = "0";
-    }
-  });
-  document.body.addEventListener("htmx:sendError", function (event) {
-    if (!navigator.onLine) {
-      event.detail.xhr.abort();
-      alert("You are offline. This action requires an internet connection.");
-    }
-  });
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/static/service-worker3.js')
-      .then((registration) => {
-        console.log('ServiceWorker registered: ', registration.scope);
-        registration.update();
-      })
-      .catch((error) => console.log('ServiceWorker registration failed: ', error));
-  });
-  let lastPageHidden = Date.now();
+      <div class="title-bar-text">
+        <span>streamitnow.site/home</span> {/* Example path */}
+      </div>
+      <div class="nav-links">
+         {/* Add actual links if needed, e.g.,
+         <a href="/settings">~/settings</a>
+         <a href="/about">~/about</a>
+         */}
+      </div>
+    </div>
+    <main class="terminal-content">
+      <h1 class="page-title">Xbox Media</h1>
+      <div class="command-line">
+        <span class="prompt">$ </span><span class="command">cd /xbox/media</span>
+      </div>
+      <div class="command-line">
+        <span class="prompt">$ </span><span class="command">ls -la *.mp4 | sort -r</span>
+      </div>
+      <div class="output-line">
+        <span class="prompt">$ </span><span id="clip-count-output">found clips...</span> {/* Placeholder */}
+      </div>
+      <section id="media-container">
+        <div id="media-content" hx-get="/media_page/1" hx-trigger="load" hx-swap="innerHTML">
+          <div class="flex flex-col items-center justify-center h-52">
+            <div class="loading-spinner w-10 h-10 border-4 rounded-full animate-spin"></div>
+            <p class="mt-2">Loading media...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    {/* Footer removed to match terminal aesthetic, can be added back if needed */}
+  </div>
 
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) {
-      // Page is now visible
-      const timeHidden = Date.now() - lastPageHidden;
-      if (timeHidden > 1000) {  // If page was hidden for more than 1 second
+  {/* Existing script for HTMX, offline check, visibility change, popstate */}
+  <script>
+    document.body.addEventListener("htmx:beforeOnLoad", function (event) {
+      if (event.detail.xhr.getResponseHeader("X-Reset-Body-Padding")) {
+        document.body.style.paddingTop = "0";
+        document.body.style.paddingBottom = "0";
+      }
+    });
+    document.body.addEventListener("htmx:sendError", function (event) {
+      if (!navigator.onLine) {
+        event.detail.xhr.abort();
+        alert("You are offline. This action requires an internet connection.");
+      }
+    });
+
+    let lastPageHidden = Date.now();
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) {
+        const timeHidden = Date.now() - lastPageHidden;
+        if (timeHidden > 1000) {
+          location.reload();
+        }
+      } else {
+        lastPageHidden = Date.now();
+      }
+    });
+
+    window.addEventListener('popstate', function (event) {
+      // Reload if coming back from a stream page
+      if (document.referrer && (document.referrer.includes('/stream/') || document.referrer.includes('/brainrot/') || document.referrer.includes('/cgtiktok/'))) {
         location.reload();
       }
-    } else {
-      // Page is now hidden
-      lastPageHidden = Date.now();
-    }
-  });
+    });
 
-  window.addEventListener('popstate', function (event) {
-    if (document.referrer.includes('/stream/')) {
-      location.reload();
-    }
-  });
-</script>
-
+    // Optional: Update clip count dynamically after media loads
+    // document.body.addEventListener('htmx:afterSwap', function(event) {
+    //   if (event.detail.target.id === 'media-content') {
+    //     const mediaTiles = document.querySelectorAll('#media-content .media-tile[data-type="stream"]');
+    //     const count = mediaTiles.length; // This only counts loaded tiles, might need adjustment for total
+    //     const countOutput = document.getElementById('clip-count-output');
+    //     if (countOutput) {
+    //        countOutput.textContent = `found ${count} clips (loaded)`; // Example update
+    //     }
+    //   }
+    // });
+  </script>
+</body>
 </html>

@@ -2,73 +2,131 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <style>
-    /* Inherit variables from index.html, but define locally for robustness */
-    :root {
-        --bg-color: #000000; /* Black background */
-        --text-color: #00FF00; /* Green text */
-        --border-color: #00FF00; /* Green border */
-        --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay */
-    }
-    /* These styles apply specifically within the media_page fragment */
+    /* Inherit variables from index.html */
     .media-tile {
-        background-color: var(--bg-color); /* Ensure tile background matches */
-        border: 1px solid var(--border-color); /* Add border to tiles */
-        color: var(--text-color); /* Ensure text color is green */
+        background-color: var(--bg-color, #000); /* Default to black */
+        border: 1px solid var(--border-color, #00FF00); /* Default to green */
+        color: var(--text-color, #00FF00); /* Default to green */
+        position: relative; /* Needed for absolute positioning of text */
+        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+        overflow: hidden; /* Hide overflowing parts */
+        display: flex; /* Use flexbox for layout */
+        flex-direction: column; /* Stack image and info bar vertically */
+        /* justify-content: space-between; Removed as info bar is now below */
+    }
+    .media-tile.ghost-loading {
+        background-color: #080808; /* Slightly lighter black for ghost */
+        /* justify-content: center; Removed, ghost image handles centering */
     }
     .media-tile.ghost-loading .ghost-image {
-        background-color: #050505; /* Darker gray for ghost */
-        opacity: 1; /* Make ghost visible */
+        flex-grow: 1; /* Allow ghost image to fill space */
+        background-color: #111; /* Dark placeholder */
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
-     .media-tile:hover {
-        border-color: #FFFFFF; /* White border on hover */
+     /* Remove hover border change for simplicity */
+     /* .media-tile:hover {
+        border-color: #FFFFFF;
+     } */
+
+    .image-container {
+        width: 100%; /* Ensure container takes full width */
+        aspect-ratio: 16 / 9; /* Set aspect ratio on the container */
+        position: relative; /* Keep relative for cached icon */
+        background-color: #111; /* Background for loading images */
+        display: flex; /* Center potential ghost icon */
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Hide image overflow */
+    }
+    .image-container img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Cover the area */
+        opacity: 0; /* Hidden initially */
+        transition: opacity 0.3s ease-in-out;
+    }
+     .image-container img.loaded {
+        opacity: 1;
      }
 
-    .title-overlay {
-        background: var(--overlay-bg); /* Use overlay variable */
-        color: var(--text-color);
-        opacity: 1; /* Make overlay always visible */
-        text-align: center; /* Center text */
+    /* Info bar below the image */
+    .info-bar {
+        padding: 0.25rem 0.5rem; /* py-1 px-2 */
+        font-size: 0.875rem; /* text-sm */
+        line-height: 1.25rem;
+        text-align: left; /* Align text left */
+        width: 100%; /* Take full width */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Add ellipsis for long names */
+        flex-shrink: 0; /* Prevent shrinking */
+        /* Removed background, position absolute etc. */
     }
-    .title-text {
-         font-size: 0.8rem; /* Adjust font size if needed */
+    /* .info-text class removed */
+
+
+    /* Remove separate duration indicator style */
+    /* .duration-indicator { ... } */
+
+    .cached-icon {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 1rem; /* w-4 */
+        height: 1rem; /* h-4 */
+        z-index: 10;
+        /* Green checkmark using SVG */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2300FF00'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd' /%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        display: none; /* Hidden by default */
+    }
+    .media-tile.cached .cached-icon {
+        display: block; /* Show when cached */
     }
 
-    .duration-indicator {
-        background-color: var(--overlay-bg);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 0; /* Remove border-radius */
-        padding: 1px 3px; /* Adjust padding */
-        font-size: 0.7rem; /* Adjust font size */
-        opacity: 1; /* Make visible */
+    /* Adjust grid gap */
+    .grid {
+        gap: 0.75rem; /* gap-3 */
     }
-    .cached-icon {
-        /* Consider using a green checkmark or different indicator */
-        filter: grayscale(1) brightness(1.5) contrast(3); /* Basic attempt to make it green-ish */
+    /* Ensure ghost SVG is visible */
+    .ghost-image svg {
+        color: var(--border-color, #00FF00); /* Use border color for icon */
+        opacity: 0.5;
     }
+
 </style>
 {% if media %}
-<div class="grid gap-2 p-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-auto xl:grid-cols-min-[160px]">
+{# Use Tailwind classes directly where possible, remove conflicting inline styles if any #}
+<div class="grid gap-3 p-4 grid-cols-3"> {# Changed grid columns to 3 #}
     {% for item in media %}
-    {# Remove rounded-lg, shadow-md, hover:scale-105 for a flatter look #}
-    <div class="media-tile ghost-loading aspect-square relative overflow-hidden transition-transform duration-300 ease-in-out"
+    <div class="media-tile ghost-loading" {# Removed aspect-ratio here, moved to image-container #}
         data-name="{{ item.name }}" data-thumbnail="{{ item.thumbnail }}" data-type="{{ item.type }}"
-        data-duration="{{ item.duration if item.type == 'stream' else '' }}" {% if item.type=='stream' %}
-        hx-get="/stream/{{ item.name }}" hx-trigger="click" hx-target="body" hx-push-url="true" hx-preload="mouseover"
-        {% endif %}>
-        <div class="image-container h-full"> {# Ensure image container takes full height #}
-            <div class="ghost-image h-full"> {# Removed extra classes #}
-            </div>
-        </div>
-        <div class="title-overlay absolute bottom-0 left-0 right-0 p-1"> {# Adjusted padding #}
-            <p class="title-text m-0">{{ item.name }}</p> {# Removed text-sm, text-center #}
-        </div>
-        {% if item.type == 'stream' %}
-        <div class="duration-indicator absolute bottom-1 right-1"> {# Removed extra classes #}
-            {{ item.duration }}
-        </div>
+        data-duration="{{ item.duration if item.type == 'stream' and item.duration else '' }}" {# Check duration exists #}
+        {% if item.type=='stream' %}
         {% endif %}
-        <div class="cached-icon hidden absolute top-1 left-1 w-6 h-6 bg-contain bg-no-repeat bg-center z-10"></div>
+        {# Removed data-cached attribute, will use class instead #}
+        >
+        {% if item.type=='stream' %}
+        hx-get="/stream/{{ item.name }}" hx-trigger="click" hx-target="body" hx-push-url="true" hx-preload="mouseover"
+        {% endif %}
+        {# Removed data-cached attribute, will use class instead #}
+        >
+        <div class="image-container">
+            <div class="ghost-image">
+                 {# SVG placeholder for ghost image #}
+                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            {# Image tag will be added by JS inside image-container #}
+             <div class="cached-icon"></div> {# Icon is absolutely positioned inside image-container #}
+        </div>
+        <div class="info-bar"> {# Changed from info-overlay #}
+            {{ item.name }} {% if item.type == 'stream' and item.duration %}{{ item.duration }}{% endif %} {# Combined name and duration #}
+        </div>
     </div>
     {% endfor %}
 </div>
@@ -84,42 +142,62 @@
             const cachedResponse = await cacheStorage.keys();
 
             // Extracting video IDs from cached responses
-            const cachedVideoIds = cachedResponse.map(request => request.url.split('/').pop()); // Adjust based on your URL structure
-            const cachedVideos = JSON.parse(localStorage.getItem('video-metadata')) || [];
-            const cachedVideoNames = cachedVideos.map(video => video.name);
+            // Extracting video IDs from cached responses (assuming ID is the last part of the URL)
+            // Extracting video IDs from cached responses (assuming ID is the last part of the URL)
+            const cachedVideoIds = cachedResponse.map(request => {
+                try {
+                    // Handle potential errors if URL is not as expected
+                    const urlParts = request.url.split('/');
+                    return urlParts[urlParts.length - 1];
+                } catch (e) {
+                    console.error("Error parsing cache URL:", request.url, e);
+                    return null;
+                }
+            }).filter(id => id !== null); // Filter out any nulls from parsing errors
+
 
             const tiles = document.querySelectorAll('.media-tile');
             tiles.forEach(tile => {
                 const name = tile.dataset.name;
-                if (cachedVideoNames.includes(name) || cachedVideoIds.includes(name)) {
-                    const cachedIcon = tile.querySelector('.cached-icon');
-                    cachedIcon.style.display = 'block';
-                    cachedIcon.style.backgroundImage = 'url("/static/icon-check-small.png")';
+                // Check if the video name exists in the list of cached IDs
+                if (name && cachedVideoIds.includes(name)) { // Check if name exists
+                    tile.classList.add('cached'); // Add .cached class to the tile
+                } else {
+                    tile.classList.remove('cached'); // Ensure class is removed if not cached
                 }
             });
         }
+
 
         function loadActualContent() {
             const tiles = document.querySelectorAll('.media-tile.ghost-loading');
             tiles.forEach(tile => {
                 const name = tile.dataset.name;
                 const thumbnail = tile.dataset.thumbnail;
-                const type = tile.dataset.type;
-                const duration = tile.dataset.duration;
+                const imageContainer = tile.querySelector('.image-container');
 
-                tile.innerHTML = `
-            <div class="image-container">
-                <img preload class="lazy-load" data-src="${thumbnail}" alt="${name}">
-            </div>
-            <div class="title-overlay">
-                <p class="title-text">${name}</p>
-            </div>
-            ${type === 'stream' ? `<div class="duration-indicator">${duration}</div>` : ''}
-            <div class="cached-icon" style="display: none;"></div>
-        `;
+                if (imageContainer && thumbnail) { // Check if thumbnail exists
+                    // Remove ghost content if it exists
+                    const ghostImage = imageContainer.querySelector('.ghost-image');
+                    if (ghostImage) {
+                        ghostImage.remove();
+                    }
 
-                tile.classList.remove('ghost-loading');
-                tile.classList.add('loading');
+                    // Create and append the actual image
+                    const img = document.createElement('img');
+                    img.className = 'lazy-load'; // Add class for lazy loading
+                    img.alt = name || 'Media thumbnail'; // Add default alt text
+                    img.dataset.src = thumbnail; // Set data-src for lazy loader
+                    imageContainer.appendChild(img);
+
+                    tile.classList.remove('ghost-loading');
+                    tile.classList.add('loading'); // Add loading class for lazy load trigger
+                } else {
+                    // If no thumbnail, maybe keep ghost or show error?
+                    console.warn("No thumbnail found for:", name);
+                    // Optionally remove ghost class anyway if you don't want the placeholder
+                    // tile.classList.remove('ghost-loading');
+                }
             });
             lazyLoadImages();
         }
