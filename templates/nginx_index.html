@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/static/manifest.json" />
-    <meta name="theme-color" content="#121212" />
+    <meta name="theme-color" content="#000000" /> {/* Updated theme color */}
     <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
-    <title>My Xbox Media Streaming App</title>
+    <title>Xbox Media Stream</title> {/* Updated title */}
     <script>
       // Utility function to convert VAPID key from base64 URL string to Uint8Array
       function urlB64ToUint8Array(base64String) {
@@ -81,71 +81,236 @@
       });
     </script>
     <style>
+      :root {
+        --bg-color: #000000;
+        --text-color: #00FF00; /* Using bright green */
+        --border-color: rgba(0, 255, 0, 0.25); /* Lighter border */
+        --title-bar-color: rgba(0, 255, 0, 0.5);
+        --button-border-color: rgba(0, 255, 0, 0.5);
+        --button-hover-bg: rgba(0, 255, 0, 0.1);
+        --link-color: #00FF00;
+        --link-hover-color: #FFFFFF;
+      }
+
       body {
-        font-family: 'Courier New', Courier, monospace; /* Monospaced font */
-        background-color: #000000; /* Black background */
-        color: #00FF00; /* Green text */
+        font-family: 'Courier New', Courier, monospace;
+        background-color: var(--bg-color);
+        color: var(--text-color);
         margin: 0;
-        padding: 2rem; /* Add some padding */
+        padding: 1rem; /* Adjusted padding */
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        text-align: center;
-        box-sizing: border-box; /* Include padding in height calculation */
+        min-height: 100vh; /* Use min-height */
+        box-sizing: border-box;
       }
-      .container {
-        /* Remove background and border-radius for a simpler look */
-        /* background-color: rgba(0, 0, 0, 0.7); */
-        padding: 2rem;
-        /* border-radius: 10px; */
-        border: 1px solid #00FF00; /* Optional: Add a green border */
-        max-width: 600px;
+
+      .terminal-window {
+        width: 100%;
+        max-width: 42rem; /* max-w-2xl */
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem; /* rounded-md */
+        background-color: rgba(0, 0, 0, 0.9);
+        box-shadow: 0 10px 15px -3px rgba(0, 255, 0, 0.1), 0 4px 6px -2px rgba(0, 255, 0, 0.05); /* shadow-lg shadow-emerald-900/20 */
+        overflow: hidden; /* Ensure children don't overflow rounded corners */
       }
-      h1 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        text-shadow: 0 0 5px #00FF00; /* Optional: Add a subtle glow */
+
+      .title-bar {
+        padding: 0.75rem 1.5rem; /* p-3 adjusted */
+        display: flex;
+        align-items: center;
+        background-color: rgba(16, 16, 16, 0.5); /* Darker title bar */
       }
-      p {
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-      }
-      a { /* Style links */
-        color: #00FF00;
-        text-decoration: underline;
-      }
-      a:hover {
-        color: #FFFFFF; /* White on hover */
-        text-decoration: none;
-      }
-      .btn {
+
+      .title-bar-dots span {
         display: inline-block;
-        background-color: transparent; /* Transparent background */
-        color: #00FF00; /* Green text */
-        border: 1px solid #00FF00; /* Green border */
+        height: 0.75rem; /* h-3 */
+        width: 0.75rem; /* w-3 */
+        border-radius: 9999px; /* rounded-full */
+        margin-right: 0.5rem; /* mr-2 */
+      }
+      .dot-red { background-color: #ef4444; } /* bg-red-500 */
+      .dot-yellow { background-color: #f59e0b; } /* bg-yellow-500 */
+      .dot-green { background-color: #22c55e; } /* bg-green-500 */
+
+      .title-bar-text {
+        flex-grow: 1;
+        text-align: center;
+        color: var(--title-bar-color);
+        font-size: 0.875rem; /* text-sm */
+      }
+
+      .terminal-content {
+        padding: 1.5rem; /* p-6 */
+        border-top: 1px solid var(--border-color); /* border-t */
+      }
+
+      .command-line {
+        font-size: 0.875rem; /* text-sm */
+        margin-bottom: 2rem; /* mb-8 */
+      }
+      .command-line:last-of-type {
+         margin-bottom: 2rem; /* mb-8 on last command line */
+      }
+
+      .prompt {
+        color: var(--text-color);
+      }
+
+      .command {
+         color: var(--text-color);
+      }
+
+      .terminal-title {
+        color: var(--text-color);
+        font-size: 1.875rem; /* text-3xl */
+        line-height: 2.25rem;
+        margin-bottom: 1.5rem; /* mb-6 */
+        letter-spacing: -0.025em; /* tracking-tight */
+      }
+       @media (min-width: 768px) {
+         .terminal-title {
+            font-size: 1.875rem; /* text-3xl */
+         }
+       }
+
+
+      .description-line {
+        color: rgba(0, 255, 0, 0.9); /* text-emerald-300/90 */
+        margin-bottom: 1.5rem; /* mb-6 */
+        font-size: 0.875rem; /* text-sm */
+        min-height: 1.25rem; /* Ensure space for cursor */
+      }
+
+      .cursor {
+        display: inline-block;
+        background-color: var(--text-color);
+        width: 0.5em; /* Adjust width as needed */
+        height: 1em;
+        vertical-align: text-bottom;
+        opacity: 1;
+      }
+
+      .cursor.hidden {
+        opacity: 0;
+      }
+
+      .link {
+        color: var(--link-color);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        transition: color 0.3s ease;
+      }
+      .link:hover {
+        color: var(--link-hover-color);
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem; /* mt-8 */
+      }
+
+      .terminal-button {
+        padding: 0.5rem 1.5rem; /* px-6 py-2 */
+        border: 1px solid var(--button-border-color);
+        color: var(--text-color);
+        font-size: 0.875rem; /* text-sm */
+        background-color: transparent;
+        transition: background-color 0.3s ease;
+        border-radius: 0.25rem; /* rounded */
         text-decoration: none;
-        padding: 0.8rem 1.5rem;
-        border-radius: 0; /* No border-radius */
-        font-size: 1.2rem;
-        transition: background-color 0.3s ease, color 0.3s ease;
-        cursor: pointer; /* Add cursor pointer */
+        cursor: pointer;
       }
-      .btn:hover {
-        background-color: #00FF00; /* Green background on hover */
-        color: #000000; /* Black text on hover */
+      .terminal-button:hover {
+        background-color: var(--button-hover-bg);
       }
+      .terminal-button:focus {
+         outline: 2px solid transparent;
+         outline-offset: 2px;
+         box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--button-border-color); /* focus rings */
+      }
+
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>Welcome to My Xbox Media Streaming App</h1>
-      <p>
-        Stream my Xbox clips directly from my personal computer. Visit
-        <a href="https://github.com/anirudhvsp/xboxBackup">GitHub</a> for more
-        info.
-      </p>
-      <a href="/home" class="btn">Enter App</a>
+    <div class="terminal-window">
+      <div class="title-bar">
+        <div class="title-bar-dots">
+          <span class="dot-red"></span>
+          <span class="dot-yellow"></span>
+          <span class="dot-green"></span>
+        </div>
+        <div class="title-bar-text">
+          <span>streamitnow.site</span>
+        </div>
+      </div>
+
+      <div class="terminal-content">
+        <div class="command-line">
+          <span class="prompt">$ </span>
+          <span class="command">init --app xbox-stream</span>
+        </div>
+
+        <h1 class="terminal-title">Xbox Media Streaming</h1>
+
+        <div class="description-line">
+          <span class="prompt">$ </span>
+          <span id="typed-text"></span><span id="cursor" class="cursor"></span>
+        </div>
+
+        <div class="command-line">
+          <span class="prompt">$ </span>
+          <span>Visit </span>
+          <a href="https://github.com/anirudhvsp/xboxBackup" target="_blank" rel="noopener noreferrer" class="link">GitHub</a>
+          <span> for documentation and source code.</span>
+        </div>
+
+        <div class="button-container">
+          <a href="/home" class="terminal-button">
+            ./enter.sh
+          </a>
+        </div>
+      </div>
     </div>
+
+    <script>
+      const typedTextElement = document.getElementById("typed-text");
+      const cursorElement = document.getElementById("cursor");
+      const fullText = "Stream Xbox clips directly from your personal computer.";
+      let currentText = "";
+      let charIndex = 0;
+      let cursorVisible = true;
+
+      function typeText() {
+        if (charIndex < fullText.length) {
+          currentText += fullText.charAt(charIndex);
+          typedTextElement.textContent = currentText;
+          charIndex++;
+          setTimeout(typeText, 50); // Adjust typing speed (milliseconds)
+        } else {
+           // Typing finished, ensure cursor is visible initially
+           cursorElement.classList.remove('hidden');
+           startBlinking();
+        }
+      }
+
+      function blinkCursor() {
+        cursorVisible = !cursorVisible;
+        cursorElement.classList.toggle('hidden', !cursorVisible);
+      }
+
+      function startBlinking() {
+         setInterval(blinkCursor, 530); // Adjust blinking speed (milliseconds)
+      }
+
+      // Start typing animation when the page loads
+      document.addEventListener('DOMContentLoaded', () => {
+          // Hide cursor initially until typing starts
+          cursorElement.classList.add('hidden');
+          setTimeout(typeText, 500); // Small delay before starting typing
+      });
+
+    </script>
   </body>
 </html>
