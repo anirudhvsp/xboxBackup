@@ -8,10 +8,18 @@
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
     <style>
         :root {
-            --bg-color: #000000;
-            --text-color: #ffffff;
+            --bg-color: #000000; /* Black background */
+            --text-color: #00FF00; /* Green text */
+            --button-bg: transparent; /* Transparent button background */
+            --button-text: #00FF00; /* Green button text */
+            --button-hover-bg: #00FF00; /* Green button hover background */
+            --button-hover-text: #000000; /* Black button hover text */
+            --border-color: #00FF00; /* Green border */
         }
         body, html {
+            font-family: 'Courier New', Courier, monospace; /* Monospaced font */
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 0;
             width: 100vw;
@@ -48,21 +56,23 @@
 
         .ghost-loading {
             height: 100vh;
-            background-color: #1a1a1a;
+            background-color: var(--bg-color); /* Use background color */
+            display: flex; /* Ensure flex properties work */
             justify-content: center;
             align-items: center;
-            color: white;
+            color: var(--text-color); /* Use text color */
             font-size: 24px;
+            border: 1px dashed var(--border-color); /* Optional: Add a dashed border */
         }
         .back-button {
             position: fixed;
             top: 20px;
             left: 20px;
             z-index: 1000;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            border-radius: 50%;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 1px solid var(--border-color); /* Add border */
+            border-radius: 0; /* Remove border-radius */
             width: 40px;
             height: 40px;
             font-size: 20px;
@@ -70,30 +80,34 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
         }
 
         .back-button:hover {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: var(--button-hover-bg);
+            color: var(--button-hover-text);
         }
 
         .download-button {
             position: fixed;
             bottom: 20px;
-            right: 20px; /* Changed from left: 20px to right: 20px */
+            right: 20px;
             z-index: 1000;
             width: 50px;
             height: 50px;
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
+            border-radius: 0; /* Remove border-radius */
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 1px solid var(--border-color); /* Add border */
             cursor: pointer;
             display: flex;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
             justify-content: center;
             align-items: center;
         }
     .download-button:hover {
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
     }
 
     .progress-ring {
@@ -103,6 +117,7 @@
     }
 
     .progress-ring__circle {
+        stroke: var(--text-color); /* Use text color for stroke */
         transition: 0.35s stroke-dashoffset;
         transform: rotate(-90deg);
         transform-origin: 50% 50%;
@@ -113,10 +128,11 @@
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
+    background-color: var(--bg-color); /* Use background color */
+    color: var(--text-color); /* Use text color */
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 0; /* No border-radius */
+    border: 1px solid var(--border-color); /* Add border */
     z-index: 1002;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
@@ -130,10 +146,10 @@
     top: 20px;
     right: 20px;
     z-index: 1000;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    border-radius: 50%;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--border-color); /* Add border */
+    border-radius: 0; /* Remove border-radius */
     width: 40px;
     height: 40px;
     font-size: 20px;
@@ -141,24 +157,40 @@
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
 }
 
 .share-button:hover {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--button-hover-bg);
+    color: var(--button-hover-text);
 }
+
+    /* Style Plyr controls - basic attempt */
+    .plyr__control {
+        color: var(--text-color) !important; /* Force green color */
+        background: var(--bg-color) !important; /* Force black background */
+    }
+    .plyr__control--overlaid {
+        background: rgba(0, 0, 0, 0.7) !important; /* Darker overlay */
+        color: var(--text-color) !important;
+    }
+    .plyr__control:hover {
+        background: var(--button-hover-bg) !important; /* Green hover */
+        color: var(--button-hover-text) !important; /* Black text on hover */
+    }
 
 
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="window.location.href='/home'">&larr;</button>
+    <button class="back-button" onclick="window.location.href='/home'">←</button> <!-- Use simple arrow -->
     <button id="downloadButton" class="download-button">
         <svg class="progress-ring" width="50" height="50">
-            <circle class="progress-ring__circle" stroke="white" stroke-width="2" fill="transparent" r="23" cx="25" cy="25"/>
+            <circle class="progress-ring__circle" stroke-width="2" fill="transparent" r="23" cx="25" cy="25"/>
         </svg>
-        <span>⬇️</span>
+        <span>↓</span> <!-- Use simple arrow -->
     </button>
-    <button class="share-button" onclick="shareUrl()">&#128279;</button>
+    <button class="share-button" onclick="shareUrl()">🔗</button> <!-- Use link symbol -->
     <div class="video-wrapper" id="videoWrapper">
         <div class="ghost-loading" id="previousGhostLoading"></div>
 

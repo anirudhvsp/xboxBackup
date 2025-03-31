@@ -11,21 +11,23 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/m3u8-parser@4.7.1/dist/m3u8-parser.min.js"></script>
   <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
-  <style>
+    <style>
     :root {
-      --bg-color: #121212;
-      --text-color: #ffffff;
-      --button-bg: #333333;
-      --button-text: #ffffff;
-      --button-hover-bg: #444444;
-      --button-hover-text: #ffffff;
+      --bg-color: #000000; /* Black background */
+      --text-color: #00FF00; /* Green text */
+      --button-bg: transparent; /* Transparent button background */
+      --button-text: #00FF00; /* Green button text */
+      --button-hover-bg: #00FF00; /* Green button hover background */
+      --button-hover-text: #000000; /* Black button hover text */
+      --border-color: #00FF00; /* Green border */
     }
 
     body {
+      font-family: 'Courier New', Courier, monospace; /* Monospaced font */
       background-color: var(--bg-color);
       color: var(--text-color);
-      /* margin: 0; */
-      /* padding-top: 33vh; */
+      /* margin: 0; */ /* Keep margin adjustments if needed */
+      /* padding-top: 33vh; */ /* Keep padding adjustments if needed */
       /* padding-bottom: 50px; */
       /* display: flex; */
       /* flex-direction: column; */
@@ -40,6 +42,7 @@
       top: 0;
       left: 0;
       z-index: 1000;
+      border-bottom: 1px solid var(--border-color); /* Add border */
     }
 
     .video-wrapper {
@@ -59,6 +62,7 @@
       left: 0;
       width: 100%;
       z-index: 1001;
+      border-top: 1px solid var(--border-color); /* Add border */
     }
 
     #downloadVid {
@@ -68,9 +72,10 @@
       border-radius: 0;
       background-color: var(--button-bg);
       color: var(--button-text);
-      border: none;
+      border: 1px solid var(--border-color); /* Add border */
       cursor: pointer;
       font-size: 16px;
+      transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
     }
 
     #downloadVid:hover {
@@ -92,8 +97,8 @@
     }
 
     .spinner {
-      border: 5px solid var(--button-bg);
-      border-top: 5px solid var(--button-text);
+      border: 5px solid var(--border-color); /* Use border color */
+      border-top: 5px solid var(--text-color); /* Use text color for spinning part */
       border-radius: 50%;
       width: 50px;
       height: 50px;
@@ -128,9 +133,10 @@
       border-radius: 0;
       background-color: var(--button-bg);
       color: var(--button-text);
-      border: none;
+      border: 1px solid var(--border-color); /* Add border */
       cursor: pointer;
       font-size: 16px;
+      transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
     }
 
     #backToHome:hover,
@@ -177,10 +183,18 @@
       border-radius: 0;
       background-color: var(--button-bg);
       color: var(--button-text);
-      border: none;
+      border: 1px solid var(--border-color); /* Add border */
       cursor: pointer;
       font-size: 16px;
+      transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
     }
+
+    #offlineDownload:hover,
+    #deleteOffline:hover {
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
+    }
+
 
     #downloadProgress {
       width: 48%;
@@ -190,7 +204,23 @@
     #progressBar {
       width: 100%;
       height: 20px;
+      appearance: none; /* Remove default browser styling */
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
     }
+    /* Style the progress bar value */
+    #progressBar::-webkit-progress-bar {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+    }
+    #progressBar::-webkit-progress-value {
+        background-color: var(--text-color); /* Green fill */
+    }
+    #progressBar::-moz-progress-bar {
+        background-color: var(--text-color); /* Green fill */
+        border: 1px solid var(--border-color);
+    }
+
 
     #progressText {
       display: block;
@@ -203,10 +233,11 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
+      background-color: var(--bg-color); /* Use background color */
+      color: var(--text-color); /* Use text color */
       padding: 10px 20px;
-      border-radius: 5px;
+      border-radius: 0; /* No border-radius */
+      border: 1px solid var(--border-color); /* Add border */
       z-index: 1002;
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
@@ -216,11 +247,40 @@
       opacity: 1;
     }
 
+    /* Style Plyr controls - basic attempt */
+    .plyr__control {
+        color: var(--text-color) !important; /* Force green color */
+        background: var(--bg-color) !important; /* Force black background */
+    }
+    .plyr__control--overlaid {
+        background: rgba(0, 0, 0, 0.7) !important; /* Darker overlay */
+        color: var(--text-color) !important;
+    }
+    .plyr__control:hover {
+        background: var(--button-hover-bg) !important; /* Green hover */
+        color: var(--button-hover-text) !important; /* Black text on hover */
+    }
+    .plyr__progress input[type=range] {
+        color: var(--text-color) !important; /* Green progress */
+    }
+     .plyr__volume input[type=range] {
+        color: var(--text-color) !important; /* Green volume */
+    }
+    .plyr__menu__button--radio[aria-checked=true]::before {
+        background: var(--text-color) !important; /* Green checkmark */
+    }
+    .plyr__tooltip {
+        background: var(--bg-color) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+
+
     .plyr__controls__item.seek-button {
     font-size: 1.5rem;
     background: none;
     border: none;
-    color: white;
+    color: var(--text-color); /* Use text color */
     cursor: pointer;
     margin: 0 5px;
   }

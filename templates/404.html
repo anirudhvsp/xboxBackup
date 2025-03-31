@@ -5,10 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Page Not Found</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
-        h1 { color: #333; }
-        p { color: #666; }
-        .redirect-message { margin-top: 20px; font-style: italic; }
+        :root {
+            --bg-color: #000000; /* Black background */
+            --text-color: #00FF00; /* Green text */
+            --border-color: #00FF00; /* Green border */
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Monospaced font */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: var(--text-color);
+            text-shadow: 0 0 5px var(--text-color); /* Optional glow */
+        }
+        p {
+            color: var(--text-color);
+        }
+        .redirect-message {
+            margin-top: 20px;
+            font-style: normal; /* Remove italic */
+        }
+        a { /* Style links if any appear */
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+        a:hover {
+            color: #FFFFFF;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>

@@ -14,16 +14,42 @@
   <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/ext/head-support.js"></script>
   <style>
         :root {
-      --bg-color: #121212;
-      --text-color: #ffffff;
-      --button-bg: #333333;
-      --button-text: #ffffff;
-      --button-hover-bg: #444444;
-      --button-hover-text: #ffffff;
-    }
+            --bg-color: #000000; /* Black background */
+            --text-color: #00FF00; /* Green text */
+            --button-bg: transparent; /* Transparent button background */
+            --button-text: #00FF00; /* Green button text */
+            --button-hover-bg: #00FF00; /* Green button hover background */
+            --button-hover-text: #000000; /* Black button hover text */
+            --border-color: #00FF00; /* Green border */
+            --link-color: #00FF00; /* Green link color */
+            --link-hover-color: #FFFFFF; /* White link hover color */
+        }
     body {
+      font-family: 'Courier New', Courier, monospace; /* Monospaced font */
       background-color: var(--bg-color);
       color: var(--text-color);
+    }
+    /* Style links within the footer */
+    footer a {
+        color: var(--link-color);
+        text-decoration: underline;
+    }
+    footer a:hover {
+        color: var(--link-hover-color);
+        text-decoration: none;
+    }
+    /* Style header */
+    header {
+        border-bottom: 1px solid var(--border-color);
+    }
+    /* Style footer */
+    footer {
+        border-top: 1px solid var(--border-color);
+    }
+    /* Loading spinner */
+    .loading-spinner {
+        border-color: var(--border-color);
+        border-top-color: var(--text-color);
     }
   </style>
   <script>

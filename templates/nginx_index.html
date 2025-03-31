@@ -82,43 +82,58 @@
     </script>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        background-color: #107c10;
-        color: #ffffff;
+        font-family: 'Courier New', Courier, monospace; /* Monospaced font */
+        background-color: #000000; /* Black background */
+        color: #00FF00; /* Green text */
         margin: 0;
-        padding: 0;
+        padding: 2rem; /* Add some padding */
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
         text-align: center;
+        box-sizing: border-box; /* Include padding in height calculation */
       }
       .container {
-        background-color: rgba(0, 0, 0, 0.7);
+        /* Remove background and border-radius for a simpler look */
+        /* background-color: rgba(0, 0, 0, 0.7); */
         padding: 2rem;
-        border-radius: 10px;
+        /* border-radius: 10px; */
+        border: 1px solid #00FF00; /* Optional: Add a green border */
         max-width: 600px;
       }
       h1 {
         font-size: 2.5rem;
         margin-bottom: 1rem;
+        text-shadow: 0 0 5px #00FF00; /* Optional: Add a subtle glow */
       }
       p {
         font-size: 1.1rem;
         margin-bottom: 2rem;
       }
+      a { /* Style links */
+        color: #00FF00;
+        text-decoration: underline;
+      }
+      a:hover {
+        color: #FFFFFF; /* White on hover */
+        text-decoration: none;
+      }
       .btn {
         display: inline-block;
-        background-color: #0078d7;
-        color: #ffffff;
+        background-color: transparent; /* Transparent background */
+        color: #00FF00; /* Green text */
+        border: 1px solid #00FF00; /* Green border */
         text-decoration: none;
         padding: 0.8rem 1.5rem;
-        border-radius: 5px;
+        border-radius: 0; /* No border-radius */
         font-size: 1.2rem;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        cursor: pointer; /* Add cursor pointer */
       }
       .btn:hover {
-        background-color: #005a9e;
+        background-color: #00FF00; /* Green background on hover */
+        color: #000000; /* Black text on hover */
       }
     </style>
   </head>
