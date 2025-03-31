@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/static/manifest.json" />
+    <meta name="theme-color" content="#121212" />
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png" />
+    <title>My Xbox Media Streaming App</title>
+    <script>
+      // Utility function to convert VAPID key from base64 URL string to Uint8Array
+      function urlB64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+      }
+
+      function subscribeToPushNotifications() {
+        const VAPID_PUBLIC_KEY = "BOizMl1SUr7poNp79ad6CGeIEB4rsFVwxy-e4lGIsP4oUFoj5R9L9H9W5RHJOzAJgYCJ5nXGEJIZtuB3q4Jmu0Q";
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((registration) => {
+              console.log("Service worker is ready. Requesting Notification permission...");
+              return Notification.requestPermission()
+                .then((permission) => {
+                  if (permission !== "granted") {
+                    throw new Error("Permission not granted for Notification");
+                  }
+                  return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                  });
+                });
+            })
+            .then((subscription) => {
+              console.log("Push subscription object:", subscription);
+              const subscriptionJson = JSON.stringify(subscription);
+              console.log("Encoded push subscription (btoa):", btoa(subscriptionJson));
+
+              // Sending subscription to the server
+              return fetch('/subscribe', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  push_token: btoa(subscriptionJson)
+                })
+              });
+            })
+            .then(response => {
+              console.log('Response from /subscribe endpoint:', response);
+              return response.json();
+            })
+            .then(data => {
+              console.log('Subscription successful:', data);
+            })
+            .catch((error) => {
+              console.error("Error during subscription:", error);
+            });
+        } else {
+          console.warn("Service Worker not supported in this browser.");
+        }
+      }
+
+      window.addEventListener("load", () => {
+        console.log("Window loaded. Starting service worker registration...");
+        navigator.serviceWorker
+          .register("/static/service-worker3.js", { scope: "/" })
+          .then((registration) => {
+            console.log("ServiceWorker registered successfully with scope:", registration.scope);
+            subscribeToPushNotifications(); // Call the subscription function here
+          })
+          .catch((error) => {
+            console.error("ServiceWorker registration failed:", error);
+          });
+      });
+    </script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #107c10;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .container {
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 2rem;
+        border-radius: 10px;
+        max-width: 600px;
+      }
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+      p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+      .btn {
+        display: inline-block;
+        background-color: #0078d7;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 5px;
+        font-size: 1.2rem;
+        transition: background-color 0.3s ease;
+      }
+      .btn:hover {
+        background-color: #005a9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to My Xbox Media Streaming App</h1>
+      <p>
+        Stream my Xbox clips directly from my personal computer. Visit
+        <a href="https://github.com/anirudhvsp/xboxBackup">GitHub</a> for more
+        info.
+      </p>
+      <a href="/home" class="btn">Enter App</a>
+    </div>
+  </body>
+</html>
