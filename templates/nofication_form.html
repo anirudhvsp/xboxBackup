@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notification Sender</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Push Notification Sender</h1>
+    <h2>Subscribers</h2>
+    <ul id="subscriber-list"></ul>
+    <h2>Send Notification</h2>
+    <input type="text" id="title" placeholder="Notification Title" required>
+    <input type="text" id="body" placeholder="Notification Body" required>
+    <input type="text" id="url" placeholder="Notification URL" required>
+    <button id="send-button">Send Notification</button>
+
+    <script>
+        $(document).ready(function() {
+            // Fetch subscribers
+            $.get('/subscribers', function(subscribers) {
+                subscribers.forEach(function(subscriber) {
+                    $('#subscriber-list').append(
+                        `<li>
+                            <input type="checkbox" value="${subscriber.id}" class="subscriber-checkbox">
+                            Subscriber ID: ${subscriber.id}
+                        </li>`
+                    );
+                });
+            });
+
+            // Send notification
+            $('#send-button').click(function() {
+                const title = $('#title').val();
+                const body = $('#body').val();
+                const url = $('#url').val();
+                const selectedSubscribers = $('.subscriber-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedSubscribers.length > 0) {
+                    $.ajax({
+                        url: '/send_notification',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            title: title,
+                            body: body,
+                            url: url,
+                            subscribers: selectedSubscribers
+                        }),
+                        success: function(response) {
+                            alert('Notifications sent successfully!');
+                        },
+                        error: function(error) {
+                            alert('Error sending notifications');
+                            console.error(error);
+                        }
+                    });
+                } else {
+                    alert('Please select at least one subscriber.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
